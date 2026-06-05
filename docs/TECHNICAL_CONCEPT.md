@@ -25,6 +25,8 @@ The world-state graph is a Git-like, content-addressed history of cognition. Eve
 
 The core philosophical invariant: the system is not a chatbot, not an agent, and not a framework. It is a persistent, distributed, event-sourced execution substrate where cognition, perception, and action are unified through a canonical world-state graph.
 
+The system's unifying principle: the runtime continuously converts high-entropy events into low-entropy reusable structure, reducing the amount of reasoning required to operate over time. This principle manifests in every layer — the RPU minimizes reasoning through accumulated structure, the summarization pipeline compresses raw events into narrative memories, the macro system compiles repeated execution patterns, the code registry captures tested reusable components, and the knowledge graph crystallizes validated facts from experience.
+
 ---
 
 ## 2. Core Invariants
@@ -51,39 +53,49 @@ The following principles are non-negotiable and govern every design decision in 
 
 ---
 
-## 3. World-State Graph
+## 3. World-State Graph Architecture
 
 The world-state graph is the single source of truth for the entire system. It is a canonical event graph where every piece of system activity is recorded as a structured event with normalized arguments, timestamps, and dependency edges.
 
 IR stands for Intermediate Representation — a canonical, normalized event format that all system components read and write. The Trace IR is the specific intermediate representation used for execution events. It decouples event producers (LLMs, sensors, tools) from event consumers (scheduler, macro system, observability pipeline), enabling each component to operate independently without knowledge of the others' internal formats.
 
-The world-state graph contains:
-
-- Sensor inputs from cameras, gaze trackers, audio, EEG, EMG, and IMU
-- Tool calls to filesystems, web APIs, MCP servers, and system commands
-- Reasoning steps from LLM outputs as structured IR
-- Execution chains representing tasks, automation flows, and subchains
-- Environmental state from home systems, mobile nodes, and remote infrastructure
-
 Nothing is treated as input versus output. Everything is an event in the same system.
 
-### 3.1 Events as Immutable Commits
+### 3.1 Sub-Graph Architecture
 
-Every Trace IR event is immutable. Events reference their causal parents, are cryptographically hashed and optionally signed, and the history is append-only. This creates a tamper-evident record of all system activity.
+Conceptually the world-state is unified. Operationally it is split into four sub-graphs to keep queries simple, indexing efficient, and maintenance manageable. Each sub-graph follows the same Git-like model — immutable events, content-addressed, DAG-structured, state-as-projection — but handles a different domain.
 
-### 3.2 State as Projection
+**Perception Graph** — sensor data, environmental facts, user state, biometrics. Answers "what is happening in the world." Contains camera captures, gaze tracking, audio, EEG, EMG, IMU, environmental sensors, and derived perception events like object detection and scene parsing.
+
+**Execution Graph** — chains, tasks, scheduling decisions, tool calls, RPU invocations. Answers "what is the system doing." Contains execution chain lifecycle events, scheduler decisions, tool call records, RPU request/response pairs, and state transitions.
+
+**Memory Graph** — episodic experiences, emotional context, narrative memories, personality evolution, relationship state. Answers "what has been experienced." Retrieved by similarity, temporal proximity, and emotional valence. Evolves as new experiences accumulate and context shifts.
+
+**Knowledge Graph** — validated facts, semantic knowledge, tested relationships, crystallized patterns. Answers "what is known to be true." Retrieved by semantic query. Facts must pass a validation pipeline before becoming knowledge. Once sufficiently validated, knowledge is treated as immutable, with revisions following the same Git-like versioning model as all other graphs.
+
+### 3.2 Cross-References Between Sub-Graphs
+
+Sub-graphs reference each other through content-addressed hashes, similar to how the macro and code registry graphs reference world-state events. A perception event (dog detected) can be referenced by an execution event (chain triggered object interaction). An execution outcome (task completed) can be referenced by a memory event (experience indexed). A memory lookup (recall past interaction) can be referenced by an execution event (context injected into RPU request). A validated fact (Bob prefers Rust) can be referenced by an execution event (code generation chose Rust for Bob's project).
+
+Each sub-graph maintains its own projection layer for queries, its own indexing strategy, and its own retention policies. The raw event log remains the source of truth for all four. Over time, additional sub-graphs may emerge as the system grows — the four-graph split is the starting point, not the final structure.
+
+### 3.3 Events as Immutable Commits
+
+Every event is immutable. Events reference their causal parents, are cryptographically hashed and optionally signed, and the history is append-only. This creates a tamper-evident record of all system activity.
+
+### 3.4 State as Projection
 
 Current state is derived from replaying events. State is a materialized view, not the source of truth. Checkpoints accelerate reconstruction but do not replace history. The system can always rebuild current world-state from the full event log.
 
-### 3.3 DAG Structure
+### 3.5 DAG Structure
 
 The graph is a DAG, not a linear chain. Multiple chains execute concurrently. Reasoning can fork. Execution paths can merge. Lineage is preserved across all branches. Execution chains behave like branches — long-running tasks become branches of execution that can pause, resume, fork, merge, or terminate. The scheduler determines which branches receive resources.
 
-### 3.4 Provenance
+### 3.6 Provenance
 
 Provenance is first-class. Every action is traceable to its origin: sensor evidence leads to world-state version, which leads to LLM intent proposal, which leads to scheduler decision, which leads to tool execution. The system can answer what happened, why it happened, what information was available, what alternatives existed, and which chain caused it.
 
-### 3.5 Git, Not Blockchain
+### 3.7 Git, Not Blockchain
 
 The goal is not distributed consensus. The goal is tamper-evident history, causal lineage, replayability, auditability, and reproducibility. The architecture is closer to Git plus Event Sourcing plus Knowledge Graph plus Distributed Runtime than to a blockchain.
 
@@ -91,7 +103,9 @@ The goal is not distributed consensus. The goal is tamper-evident history, causa
 
 ## 4. Cognitive Runtime Kernel
 
-The kernel is the operating system equivalent. It manages execution chains as DAG-based computation graphs rather than linear sequences. It handles scheduling, prioritization, interruption and resumption, long-lived workflows, resource arbitration, and tool execution lifecycle.
+The kernel is the irreplaceable core of the architecture. It is the operating system equivalent — the component that cannot be swapped out or replaced without rebuilding the entire system. While the RPU can be exchanged for any reasoning engine, the kernel is the permanent substrate that governs all execution.
+
+It manages execution chains as DAG-based computation graphs rather than linear sequences. It handles scheduling, prioritization, interruption and resumption, long-lived workflows, resource arbitration, and tool execution lifecycle.
 
 The kernel receives structured intent proposals from the LLM and other sources, validates them against current world-state, schedules them according to priority and resource availability, and executes them using the semantic orchestration primitives defined in the compatibility layer.
 
@@ -103,6 +117,7 @@ Key responsibilities:
 - Priority inheritance across full execution chains so that subchain urgency propagates correctly
 - Hard non-interruptibility for critical safety and security chains
 - Interruptible inference for non-critical chains only
+- Resource arbitration across competing chains, sub-graphs, and edge nodes
 
 ### 4.1 RPU Integration
 
@@ -165,7 +180,7 @@ The RPU produces structured cognitive artifacts rather than raw conversational t
 
 ### 5.3 Personality as State
 
-Personality is stored as structured data rather than prompt text. As an illustration, personality might be represented as dimensional traits:
+Personality is stored as structured data rather than prompt text. The trait-vector example below illustrates the form this takes, but the full personality model is richer:
 
 ```json
 {
@@ -175,6 +190,8 @@ Personality is stored as structured data rather than prompt text. As an illustra
   "directness": 0.8
 }
 ```
+
+Personality is composed of traits, preferences, communication style, values, relationship state, and interaction history. All of these are projections of accumulated events in the memory graph — personality evolves as the system accumulates experience, not through manual configuration.
 
 The runtime owns personality. The RPU consumes personality projections. This allows model replacement, personality versioning, personality evolution, and consistent behavior across backends.
 
@@ -258,6 +275,22 @@ Macros are compiled execution subgraphs, not behavior overrides. They are an opt
 
 Frequently occurring subgraphs are identified, validated, and compiled. A macro can always be expanded back into its originating events. This guarantees that no behavior is ever hidden behind macro abstraction — the full provenance chain remains accessible.
 
+### 10.2 Macro Promotion Criteria
+
+Not every repeated pattern should become a macro. A pattern is promoted only when it meets multiple criteria:
+
+- **Frequency** — the pattern occurs often enough that compilation yields measurable efficiency gains
+- **Success rate** — the pattern completes successfully across diverse contexts, not just in narrow conditions
+- **Stability** — the underlying primitives and data shapes are unlikely to change in ways that would invalidate the macro
+- **Cost savings** — the macro reduces compute time, token usage, or resource consumption compared to raw execution
+- **Semantic equivalence** — the macro's behavior is functionally identical to the original pattern, not an approximation
+
+These criteria prevent the system from generating mountains of garbage macros — low-frequency, brittle, or marginally useful patterns that add complexity without value.
+
+### 10.3 Discovery as an Open Problem
+
+Detecting useful reusable patterns is fundamentally difficult. The macro system's discovery mechanism is an active area of development. The criteria above provide a starting framework, but the actual mining algorithms, subgraph matching strategies, and semantic equivalence detection remain open research questions. The system is designed to evolve its discovery mechanism without changing the macro compilation, validation, or execution model.
+
 ---
 
 ## 11. Code Registry
@@ -278,15 +311,21 @@ Both follow the "history is more important than current state" principle. Both a
 
 ### 11.2 Separate Graphs, Unified Model
 
-The system maintains three logical graphs under the same conceptual model:
+The system maintains six logical graphs under the same conceptual model:
 
-The world-state graph handles perception, execution, sensor data, and tool calls. Events happen passively. The kernel validates intent. Query patterns answer what happened, why, and when.
+The perception graph handles sensor data, environmental facts, user state, and biometrics. Events happen passively. Query patterns answer what is happening in the world.
+
+The execution graph handles chains, tasks, scheduling decisions, tool calls, and RPU invocations. Events are generated by kernel activity. Query patterns answer what the system is doing.
+
+The memory graph handles episodic experiences, emotional context, narrative memories, personality evolution, and relationship state. Events emerge from the summarization pipeline. Query patterns answer what has been experienced and what is contextually relevant.
+
+The knowledge graph handles validated facts, semantic knowledge, tested relationships, and crystallized patterns. Facts emerge from the summarization pipeline's validation layer and must pass corroboration and consistency checks. Query patterns answer what is known to be true and how it was validated.
 
 The macro graph handles compiled execution subgraphs. Discovery is passive through sliding window mining. Validation tests against historical traces. Query patterns answer what patterns repeat and whether they are valid.
 
 The code registry graph handles versioned code components, tests, and dependencies. Components are actively written by model, agents, or user. A mandatory test pipeline validates before adoption. Query patterns answer what code exists, what version is current, and whether it passes tests.
 
-Each graph maintains its own projection layer for queries. The raw event log is only for reconstruction, audit, and debugging. Cross-graph references work like git submodules — content-addressed hashes link code components to macro bodies, macro executions to world-state events, and test runs to both the code registry and the world-state graph.
+Each graph maintains its own projection layer for queries. The raw event log is only for reconstruction, audit, and debugging. Cross-graph references work like git submodules — content-addressed hashes link code components to macro bodies, macro executions to world-state events, test runs to the execution graph, memory lookups to perception and execution context, and knowledge facts to any graph that requires validated information.
 
 ### 11.3 Mandatory Test Pipeline
 
@@ -313,15 +352,53 @@ Core infrastructure packages (frameworks, bundlers, compilers, database drivers)
 
 ---
 
-## 12. Offline Optimization
+## 12. Event Summarization and Indexing
 
-The offline optimization loop runs separately from the real-time runtime but shares the same compute infrastructure. The scheduler supports a dynamic repartition mode where compute allocation shifts toward trace mining, macro discovery, background optimization, indexing and refinement, and dataset generation for system improvements.
+Recording everything as events is conceptually elegant but operationally challenging. Cameras, gaze trackers, EEG, EMG, IMU, microphones, and system telemetry generate events at high frequency. The real challenge is not storage — it is indexing and querying.
+
+Without summarization, the system would drown in raw events. The summarization pipeline converts high-volume, low-signal data into progressively more compact and meaningful representations.
+
+### 12.1 Summarization Pipeline
+
+Raw events are the complete, unfiltered event log. Every sensor reading, tool call, state transition, and system metric is recorded here. This layer is append-only and immutable. It is the source of truth but not a query surface.
+
+Aggregated events summarize raw events over time windows or logical boundaries. Multiple camera frames become a scene description. Multiple gaze samples become an attention trajectory. Multiple IMU readings become a movement pattern. Aggregation reduces volume while preserving signal.
+
+Semantic events interpret aggregated events in context. A scene description combined with attention trajectory becomes "user is looking at object X with interest." A movement pattern combined with environmental data becomes "user is navigating from room A to room B." Semantic events are the primary input to the memory graph, the knowledge graph, and the execution graph.
+
+Narrative memories are consolidated experiences indexed for long-term recall. A sequence of semantic events from a trip becomes "visited location Y, encountered situation Z, took action W, outcome was positive." Narrative memories populate the memory graph and serve as context for future RPU invocations.
+
+Validated knowledge is extracted from semantic events and narrative memories through corroboration, testing against conflicting evidence, and consistency checks. A fact becomes knowledge only when it survives repeated validation across independent events. Facts held in a "hypothesis" state when contradictory evidence exists. Once a fact reaches sufficient confidence, it crystallizes into the knowledge graph as immutable knowledge, with revisions following the same Git-like versioning model.
+
+### 12.2 Indexing Strategy
+
+Each sub-graph uses different indexing strategies appropriate to its domain:
+
+The perception graph indexes by spatial location, time window, sensor type, and derived semantic tags. This enables queries like "what did the system perceive in this room during this time period."
+
+The execution graph indexes by chain ID, priority tier, tool type, and outcome status. This enables queries like "what chains failed in the last hour" or "which tools are most frequently used."
+
+The memory graph indexes by semantic similarity, temporal proximity, emotional valence, and relationship context. This enables queries like "what past experiences are relevant to the current situation."
+
+The knowledge graph indexes by semantic topic, confidence score, validation status, source provenance, and contradiction history. This enables queries like "what facts are known about topic X and how confident are we."
+
+### 12.3 Role in the Architecture
+
+The summarization pipeline is what makes the six-graph model operationally viable. Without it, queries across raw event data would be prohibitively expensive. With it, each graph operates on appropriately summarized data, and the memory and knowledge graphs emerge naturally from the pipeline at different compression levels.
+
+The pipeline runs continuously, with summarization depth adjustable based on compute availability. In dynamic repartition mode, the offline optimization loop can re-summarize historical events with improved algorithms, updating the memory and knowledge graphs without touching the immutable raw event log.
+
+---
+
+## 13. Offline Optimization
+
+The offline optimization loop runs separately from the real-time runtime but shares the same compute infrastructure. The scheduler supports a dynamic repartition mode where compute allocation shifts toward trace mining, macro discovery, knowledge validation, background optimization, indexing and refinement, and dataset generation for system improvements.
 
 Reserved capacity ensures that safety-critical responsiveness is maintained even during heavy offline processing. The runtime executes; the offline system evolves.
 
 ---
 
-## 13. Media and Streaming Projection
+## 14. Media and Streaming Projection
 
 Streaming is not a standalone feature. It is a projection of the world-state graph. Camera feeds are subgraphs of perception. Overlays are state annotations. Clipping is trace selection. Replay is graph reconstruction.
 
@@ -329,7 +406,7 @@ The homelab functions as a live production and orchestration renderer of the wor
 
 ---
 
-## 14. Execution Model
+## 15. Execution Model
 
 The system runs on a unified abstraction: an execution chain is a persistent, prioritized, interruptible cognitive process.
 
@@ -339,7 +416,7 @@ Chains are not sequences of prompts or tool calls. They are long-lived chains of
 
 The scheduler operates on execution opportunities, not queue draining. It continuously allocates inference and tool capacity across competing chains based on priority, resource availability, and current world-state.
 
-### 13.1 Chain Lifecycle States
+### 15.1 Chain Lifecycle States
 
 - **Active** — currently executing
 - **Waiting** — paused for an external event or signal
@@ -347,20 +424,20 @@ The scheduler operates on execution opportunities, not queue draining. It contin
 - **Resumed** — restored from waiting or parked state
 - **Escalated** — priority elevated due to dependency or user intervention
 
-### 13.2 Priority Tiers
+### 15.2 Priority Tiers
 
 - **Critical** — safety, security, system integrity. Non-interruptible.
 - **Interactive** — user-facing responses. High priority, interruptible by critical.
 - **Automation** — background workflows, tool chains. Interruptible by critical and interactive.
 - **Background** — indexing, optimization, non-urgent tasks. Interruptible by all higher tiers.
 
-### 13.3 Branch Semantics
+### 15.3 Branch Semantics
 
 Execution chains behave like branches in a version control system. They can fork when reasoning diverges, merge when execution paths converge, and terminate when complete. The scheduler manages resource allocation across all active branches, ensuring that critical chains receive priority while background work proceeds when capacity allows.
 
 ---
 
-## 15. Cross-Language Runtime Adapters
+## 16. Cross-Language Runtime Adapters
 
 The semantic orchestration layer is implemented through multiple runtime adapters, each mapping the same execution semantics onto native primitives of the host environment.
 
@@ -374,7 +451,7 @@ Each adapter does not translate code literally. It implements the same execution
 
 ---
 
-## 16. Edge Architecture
+## 17. Edge Architecture
 
 The Portable Personal Edge Node operates through five coordinated layers.
 
@@ -392,7 +469,7 @@ The system functions as a personal mobile operating environment for perception a
 
 ---
 
-## 17. Multimodal Cognitive Interface
+## 18. Multimodal Cognitive Interface
 
 The system is a world-state engine that continuously updates a structured representation of the environment, user attention, and internal state. Inputs come from multiple modalities — voice, gaze tracking, IMU and head pose, cameras in RGB, depth, and IR, EEG providing low-bandwidth cognitive and context signals, and EMG or micro-gestures for confirmation.
 
@@ -408,7 +485,7 @@ The system is a persistent ambient AI layer — a continuously running, multimod
 
 ---
 
-## 18. Security and Privacy Considerations
+## 19. Security and Privacy Considerations
 
 ### Data Boundaries
 
@@ -448,7 +525,7 @@ All execution is trace-driven. The trace IR provides a complete audit log of eve
 
 ---
 
-## 19. Glossary
+## 20. Glossary
 
 **Execution Chain** — A persistent, prioritized, interruptible cognitive process that may span reasoning steps, tool calls, waiting periods, user interactions, and subchains. The fundamental unit of work in the system.
 
@@ -456,7 +533,7 @@ All execution is trace-driven. The trace IR provides a complete audit log of eve
 
 **Trace IR** — The specific intermediate representation used for execution events. Contains chain lineage, tool usage, reasoning steps, latency, retries, interruptions, macro usage, and priority context.
 
-**World-State Graph** — The single source of truth for the entire system. A canonical event graph where every piece of system activity is recorded as a structured event with normalized arguments, timestamps, and dependency edges.
+**World-State Graph** — The unified conceptual model for all system activity, operationally split into four sub-graphs (perception, execution, memory, knowledge) plus two additional graphs (macro, code registry). All follow the same Git-like event-sourced model with cross-references between them.
 
 **Cognitive Runtime Kernel** — The execution engine that manages chains as DAG-based computation graphs, handles scheduling and prioritization, and executes intent proposals using deterministic primitives.
 
@@ -494,4 +571,22 @@ All execution is trace-driven. The trace IR provides a complete audit log of eve
 
 **Test Pipeline** — A mandatory validation system that every new code component version must pass before adoption. Runs test suites, checks coverage, verifies no regressions, and confirms dependency compatibility.
 
-**Cross-Graph Reference** — A content-addressed link between separate logical graphs (world-state, macro, code registry). Works like git submodules, enabling full provenance chains across domains while keeping queries simple.
+**Cross-Graph Reference** — A content-addressed link between separate logical graphs (perception, execution, memory, knowledge, macro, code registry). Works like git submodules, enabling full provenance chains across domains while keeping queries simple.
+
+**Perception Graph** — The sub-graph handling sensor data, environmental facts, user state, and biometrics. Answers "what is happening in the world."
+
+**Execution Graph** — The sub-graph handling chains, tasks, scheduling decisions, tool calls, and RPU invocations. Answers "what is the system doing."
+
+**Memory Graph** — The sub-graph handling episodic experiences, emotional context, narrative memories, personality evolution, and relationship state. Answers "what has been experienced." Retrieved by similarity, temporal proximity, and emotional valence.
+
+**Knowledge Graph** — The sub-graph handling validated facts, semantic knowledge, tested relationships, and crystallized patterns. Answers "what is known to be true." Facts must pass corroboration, contradiction detection, and confidence scoring before becoming immutable knowledge. Retrieved by semantic query.
+
+**Summarization Pipeline** — The multi-layer pipeline that converts raw events into aggregated events, semantic events, narrative memories, and validated knowledge. Makes the six-graph model operationally viable by reducing event volume while preserving signal. Knowledge extraction requires corroboration and confidence scoring.
+
+**Aggregated Event** — A summary of raw events over a time window or logical boundary. Multiple sensor readings become a single structured description.
+
+**Semantic Event** — An interpretation of aggregated events in context. Produces meaningful statements like "user is looking at object X with interest" from raw sensor data.
+
+**Narrative Memory** — A consolidated experience indexed for long-term recall. A sequence of semantic events compressed into a retrievable memory unit.
+
+**Knowledge Validation** — The process by which proposed facts become immutable knowledge. Requires corroboration across independent events, contradiction detection, confidence scoring, and consistency checks. Facts in a "hypothesis" state when contradictory evidence exists. Once sufficient confidence is reached, the fact crystallizes into the knowledge graph.
