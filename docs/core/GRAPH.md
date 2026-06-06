@@ -1,6 +1,6 @@
 # Git World-State Graph
 
-> This document expands on the World-State Graph section of [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md).
+> This document expands on the World-State Graph Architecture section (Section 3) of [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md).
 
 > **The world-state graph is a Git-like, content-addressed history of cognition. Every perception, reasoning step, tool call, scheduler decision, and state transition is recorded as an immutable event in a causally linked DAG. Current state is not stored separately; it is a projection of the event history.**
 
@@ -35,6 +35,87 @@ History
 Projection
     ↓
 Current World-State
+```
+
+---
+
+**Projections transform graph state into graph state**
+
+- Projections are pure functions over event streams.
+- They produce durable, queryable, composable knowledge structures.
+- They can be chained — output of one becomes input of another.
+- They optimize for correctness, persistence, and composition.
+
+```text
+Raw Signals
+    ↓
+Perception Processing
+    ↓
+Perception
+    ↓
+Projection
+    ↓
+Perception Graph
+    ↓
+Projection
+    ↓
+Semantic
+    ↓
+Projection
+    ↓
+Intent
+    ↓
+Projection
+    ↓
+Execution Graph
+    ↓
+Projection
+    ↓
+Memory Graph
+    ↓
+Projection
+    ↓
+Knowledge Graph
+```
+
+---
+
+**Six logical graphs, one conceptual model**
+
+The world-state is operationally split into six logical graphs, each following the same Git-like model:
+
+- **Perception Graph** — structured perception from signal processing (the first graph entries)
+- **Execution Graph** — chains, scheduling decisions, tool calls, RPU invocations
+- **Memory Graph** — episodic experiences, narrative memories, personality evolution
+- **Knowledge Graph** — validated facts with temporal validity, confidence decay, and revision chains
+- **Macro Graph** — compiled execution subgraphs, passively discovered through trace mining
+- **Code Registry Graph** — versioned code components, actively written and test-validated
+
+Each graph maintains its own projection layer, indexing strategy, and retention policies. Cross-graph references work like git submodules — content-addressed hashes link components across domains while keeping queries simple.
+
+---
+
+**Channels are bidirectional boundaries with the outside world**
+
+- Channels consume projected state and expose it to external surfaces.
+- Channels translate external inputs back into events.
+- Channels are leaves in the transformation pipeline — nothing projects further from them.
+- They are replaceable and independent.
+
+```text
+State Graph
+    ↓
+Channel
+    ↓
+External Surface (Web, Discord, CLI, API, etc.)
+```
+
+```text
+External Surface
+    ↓
+Channel
+    ↓
+Event
 ```
 
 ---
@@ -94,14 +175,16 @@ Events 100-150
 Every action should be traceable to:
 
 ```text
-Sensor Evidence
-       ↓
+Perception Processing
+        ↓
 World-State Version
-       ↓
-LLM Intent Proposal
-       ↓
+        ↓
+Semantic Interpretation
+        ↓
+Intent Proposal
+        ↓
 Scheduler Decision
-       ↓
+        ↓
 Tool Execution
 ```
 
@@ -144,6 +227,6 @@ than to a blockchain.
 
 ### One-Line Architecture Summary
 
-> **The Distributed Cognitive Runtime maintains a Git-like, cryptographically verifiable DAG of world-state events, where cognition, perception, execution, memory, and automation are represented as immutable history, and current reality is a continuously updated projection of that history.**
+> **The Distributed Cognitive Runtime maintains a Git-like, cryptographically verifiable DAG of world-state events, where cognition, perception, execution, memory, and automation are represented as immutable history, and current reality is a continuously updated projection of that history. Projections transform graph state into graph state; channels expose projected state to external surfaces.**
 
-That statement is the one I'd keep in mind while reviewing future revisions of the docs. If a new subsystem doesn't fit naturally into that model, it's usually a sign that it's introducing a second source of truth or violating one of your core invariants.
+That statement is the one I'd keep in mind while reviewing future revisions of the docs. If a new subsystem doesn't fit naturally into that model, it's usually a sign that it's introducing a second source of truth or violating one of your core invariants. If a transformation doesn't produce durable runtime knowledge, it's a channel, not a projection. If a channel tries to produce runtime state, it should emit events instead.

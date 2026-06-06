@@ -1,6 +1,6 @@
 # Portable Personal Edge Node (PEN)
 
-> This document expands on the Edge Architecture section of [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md).
+> This document expands on the Edge Architecture section (Section 10) of [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md).
 
 A **Portable Personal Edge Node** is a wearable, battery-powered distributed computing system that extends a user’s home AI infrastructure into the physical world by acting as a mobile sensor, network, and execution layer.
 
@@ -16,7 +16,8 @@ It consists of a **wearable compute core (bag-based node)** connected to multipl
 - Depth sensing and IMU tracking
 - Audio capture and translation
 - Local object detection and scene parsing
-- Produces structured, compressed world-state events
+- Produces structured perception — the first entries in the world-state graph
+- Raw sensor streams never leave the edge; only structured perception enters the graph
 
 **2. Local Deterministic Compute Layer**
 
@@ -72,7 +73,7 @@ It consists of a **wearable compute core (bag-based node)** connected to multipl
 
 ### Primary Outcome
 
-The system functions as a **personal mobile operating environment for perception and cognition**, enabling:
+The system functions as a **personal mobile perception and cognition layer**, enabling:
 
 - augmented navigation and awareness
 - live contextual translation and information overlay

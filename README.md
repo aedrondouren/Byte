@@ -22,16 +22,17 @@ Everything in Byte exists to support this transformation.
 
 ## What It Replaces
 
-| Before                | Byte                                                               |
-| --------------------- | ------------------------------------------------------------------ |
-| Agent loops           | Execution chains — persistent, prioritized, interruptible          |
-| Prompt chains         | Planning-first workflows — plan, execute, observe, compress        |
-| Chatbots              | World-state projections — state is primary, conversation is output |
-| External dependencies | Code registry — tested, versioned, in-house components             |
+| Before                | Byte                                                                 |
+| --------------------- | -------------------------------------------------------------------- |
+| Agent loops           | Execution chains — persistent, prioritized, interruptible            |
+| Prompt chains         | Planning-first workflows — plan, execute, observe, compress          |
+| Chatbots              | Channels over world-state — state is primary, conversation is output |
+| External dependencies | Code registry — tested, versioned, in-house components               |
 
 ## Architecture at a Glance
 
-- **Perception Graph** — what is happening in the world
+- **Signal-to-Intent Pipeline** — raw signals to structured perception to semantic to intent (the event source)
+- **Perception Graph** — structured perception from signal processing (what is happening in the world)
 - **Execution Graph** — what the system is doing
 - **Memory Graph** — episodic experience (emotional, contextual, evolving)
 - **Knowledge Graph** — validated semantic knowledge (factual, tested, immutable)
@@ -40,24 +41,27 @@ Everything in Byte exists to support this transformation.
 - **Cognitive Runtime Kernel** — the irreplaceable core (scheduler, chains, resource arbitration)
 - **Reasoning Processing Unit** — replaceable cognitive transform (LLM as coprocessor)
 
-All graphs follow the same Git-like model: immutable events, content-addressed, DAG-structured, state-as-projection. Cross-graph references link components across domains while keeping queries simple.
+All graphs follow the same Git-like model: immutable events, content-addressed, DAG-structured, state-as-projection. Cross-graph references link components across domains while keeping queries simple. Raw sensor streams never enter the graph — the first entries are structured perception from the signal-to-intent pipeline.
+
+The runtime distinguishes between **projections** (graph-to-graph transformations that build durable runtime knowledge) and **channels** (bidirectional boundaries that expose projected state to external surfaces like web UIs, Discord, CLI, and APIs).
 
 ## Key Principles
 
 - AI proposes intent; the kernel executes deterministically
 - Everything is an event; nothing is input vs output
-- State is primary; conversation is a projection
+- State is primary; conversation is a channel over that state
 - Execution chains survive waiting, suspension, and resumption
 - Reasoning is externalized into accumulated structure
 - Graceful degradation is mandatory
 
 ## Build Phases
 
-1. **Execution Graph + Kernel** — Events, scheduler, chains, tool execution, persistence
-2. **RPU Integration** — Structured requests/responses, planning, summaries
-3. **Memory + Knowledge** — Summarization, narrative memories, knowledge extraction
-4. **Macro Discovery** — Trace mining, compression, optimization (research-heavy)
-5. **PEN + Multimodal** — Cameras, sensors, EEG, AR, streaming (hardware-dependent)
+1. **Kernel + Execution Graph** — Scheduler, chains, event log, projections, non-graph runtime layer
+2. **RPU + Orchestration** — Structured contracts, Tool Services, Application Services, planning-first execution
+3. **Signal-to-Intent Pipeline** — Perception processing, semantic interpretation, intent estimation, LLM Runtime
+4. **Memory + Knowledge** — Summarization pipeline, narrative memories, knowledge extraction with time semantics
+5. **Code Registry + Macros** — Test pipeline, reusable components, macro discovery (research-heavy)
+6. **Edge + Multimodal** — PEN, cameras, sensors, EEG, AR interface, streaming (hardware-dependent)
 
 ## Documentation
 
@@ -65,9 +69,11 @@ All graphs follow the same Git-like model: immutable events, content-addressed, 
 - [CORE.md](docs/core/CORE.md) — Condensed reference summary
 - [GRAPH.md](docs/core/GRAPH.md) — Git-like world-state graph model
 - [RPU.md](docs/core/RPU.md) — Reasoning Processing Unit pattern
-- [CODE.md](docs/core/CODE.md) — Semantic orchestration and code registry
+- [ORCHESTRATION.md](docs/core/ORCHESTRATION.md) — Semantic orchestration primitives and service ecosystems
+- [MACROS.md](docs/core/MACROS.md) — Macro system (Tool Services, runtime-only)
+- [REGISTRY.md](docs/core/REGISTRY.md) — Code registry (Application Services with transpilation)
 - [EDGE.md](docs/core/EDGE.md) — Portable Personal Edge Node
-- [BCI.md](docs/core/BCI.md) — Multimodal cognitive interface
+- [INTERFACE.md](docs/core/INTERFACE.md) — Multimodal cognitive interface
 
 ## Status
 

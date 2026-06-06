@@ -4,7 +4,7 @@
 
 ## One-line definition
 
-> A distributed, event-sourced cognitive operating system where all perception, reasoning, tool execution, and media output are unified into a single canonical world-state graph, continuously optimized via deterministic execution tracing and reversible compilation of behavior into reusable semantic macros.
+> A distributed, event-sourced cognitive runtime where all perception, reasoning, tool execution, and media output are unified into a single canonical world-state graph, continuously optimized via deterministic execution tracing and reversible compilation of behavior into reusable semantic macros.
 
 ---
 
@@ -12,9 +12,9 @@
 
 You are building a system that replaces:
 
-- “agent loops”
-- “prompt chains”
-- “tool-using chatbots”
+- "agent loops"
+- "prompt chains"
+- "tool-using chatbots"
 
 with:
 
@@ -28,7 +28,7 @@ Everything (LLM, sensors, tools, streaming, automation) becomes a _projection or
 
 All system activity becomes events in one canonical structure:
 
-- sensor inputs (camera, gaze, EEG, audio)
+- perception from signal processing (object detection, speech-to-text, attention tracking)
 - tool calls (filesystem, web, APIs)
 - reasoning steps (LLM outputs as structured IR)
 - execution chains (tasks, automation flows)
@@ -36,13 +36,43 @@ All system activity becomes events in one canonical structure:
 
 ### Key property:
 
-> Nothing is “input vs output” — everything is an event in the same system.
+> Nothing is "input vs output" — everything is an event in the same system.
+
+> Raw sensor streams never enter the graph. Camera feeds, audio, gaze, IMU, EEG are piped to specialized processing systems. The first graph entries are structured perception.
 
 ---
 
-# ⚙️ 2. Execution Kernel (Cognitive Runtime)
+# 🔄 2. Signal-to-Intent Pipeline
 
-This is the “OS kernel equivalent”.
+Raw signals are converted into actionable intent through three layers:
+
+### Perception Processing (Signal → Structure)
+
+Specialized systems (YOLO, Whisper, attention trackers) convert raw sensor streams into structured perception. Deterministic, model-based, not LLM-based. Runs on edge and homelab.
+
+### Semantic Interpretation (Structure → Meaning)
+
+Cross-modal interpretation of perception using the RPU pattern: JSON in → JSON out. LLM-assisted, runs on homelab. Produces coherent understanding of what is happening.
+
+### Intent Estimation (Meaning → Action)
+
+Converges semantic and user signals into unified intent. Flows through three stages:
+
+**Intent** — state change request (what is desired)
+**Proposal** — executable candidate (how to do it)
+**Commit** — kernel-approved execution (authorization to proceed)
+
+Both user-originated and system-originated intent use the same three-stage flow.
+
+### Key property:
+
+> All stages are recorded for provenance and model training. Perception is preserved so downstream interpretation can be reprocessed with better models.
+
+---
+
+# ⚙️ 3. Execution Kernel (Cognitive Runtime)
+
+This is the execution kernel.
 
 It manages:
 
@@ -55,13 +85,29 @@ It manages:
 
 ### Important shift:
 
-> The LLM does not “run the system” — it proposes structured intent into the kernel.
+> The LLM does not "run the system" — it proposes structured intent into the kernel.
+
+### Key boundary:
+
+> The scheduler, execution workers, and cache system operate over the graph, not inside it. They are ephemeral runtime infrastructure, not persisted state.
 
 ---
 
-# 🔌 3. Semantic Compatibility Layer (Portable Effect Subset)
+# 🧠 4. Reasoning Processing Unit
 
-Instead of transpiling or cloning runtimes, you define a:
+The RPU treats the LLM as a specialized reasoning coprocessor. JSON in → JSON out. Fixed schemas. No free-form text.
+
+The same RPU pattern governs both reasoning and semantic interpretation — the model only ever sees structured data.
+
+### Key principle:
+
+> Intelligence is not the amount of reasoning performed. Intelligence is the ability to accumulate structure so that less reasoning is required in the future.
+
+---
+
+# 🔌 5. Semantic Orchestration Layer
+
+You define a:
 
 > minimal semantic orchestration API shared across languages
 
@@ -73,95 +119,52 @@ Examples:
 - stream / pipe / sink
 - provide / layer / context
 
-### Key idea:
+### Two service ecosystems
 
-> Same semantics, different backend implementations (TS / Go / C++ / Unreal)
+**Tool Services** — consumed by macros. Individual tool calls as service methods. Runtime-only, not transpilable.
+
+**Application Services** — consumed by code components. Application-level capabilities including native modules. Supports transpilation: TS+Effect → Go (nearly 1:1), C++ (runtime layer).
+
+The two ecosystems never intersect.
 
 This is NOT a DSL — it is a **portable execution meaning layer**.
 
 ---
 
-# 🧠 4. Trace IR (Event-Sourced Execution Layer)
+# 📊 6. Macro System
 
-Every action becomes:
-
-- canonical event
-- normalized arguments
-- timestamped execution node
-- dependency edge
-
-This forms a **trace graph**, which enables:
-
-- reproducibility
-- debugging
-- optimization
-- macro discovery
+Effect-style function definitions that compose Tool Services. Passively discovered through trace mining. Runtime-only — no transpilation. Reversible — always expandable to originating events.
 
 ---
 
-# ⚡ 5. Macro System (Reversible Execution Compression)
+# 📊 7. Code Registry
 
-Repeated execution patterns are detected via:
+Effect-style function definitions that compose Application Services. Actively written, must pass mandatory test pipeline. Supports transpilation: TS+Effect → Go (nearly 1:1), C++ (runtime layer for Unreal Engine).
 
-- sliding window mining over event streams
-- subgraph matching in trace graphs
-- normalization of tool calls
-
-Then:
-
-1. propose macro (LLM-assisted)
-2. validate via tests
-3. compile into reusable execution unit
-4. optionally demote if unused
-
-### Key property:
-
-> Macros are _compiled execution subgraphs_, not behavior overrides.
+Macros use Tool Services only. Code components use Application Services only. The two ecosystems never intersect.
 
 ---
 
-# 🌍 6. Distributed Architecture
+# 📝 8. Event Summarization and Indexing
 
-The system is physically split:
+Downstream of the signal-to-intent pipeline. Converts accumulated experience into progressively compact representations:
 
-### 🧠 node-1 — Cognitive Core
+- semantic → narrative memories → validated knowledge
 
-- execution kernel
-- LLM reasoning
-- scheduling
-- macro system
-
-### 🧠 node-2 — Data & perception
-
-- databases
-- embeddings
-- sensor ingestion
-- vision/audio pipelines
-
-### 🧠 node-3 — Interaction edge
-
-- UI / control surface
-- fallback interfaces
-
-### 🧠 node-4 — infra
-
-- networking
-- routing
-- security layer
+Knowledge carries temporal validity, confidence decay, and revision chains — it is durable but not final.
 
 ---
 
-# 📡 7. Edge Perception Layer (Home + Wearable Node)
-
-This expands the world-state graph spatially.
+# 🌍 9. Edge Architecture
 
 ### Home system:
 
 - fixed cameras
 - environmental mapping
 - persistent spatial memory
+- homelab cognitive core
 
-### Wearable “backpack” node:
+### Wearable "backpack" node (PEN):
 
 - mobile sensors
 - multi-uplink networking
@@ -170,11 +173,11 @@ This expands the world-state graph spatially.
 
 ### Key idea:
 
-> The system does not “observe the world” — it continuously _extends its world-state graph through mobile perception nodes_.
+> The system does not "observe the world" — it continuously _extends its world-state graph through mobile perception nodes_.
 
 ---
 
-# 👁️ 8. Multimodal Intent Layer (Human Interface)
+# 👁️ 10. Multimodal Cognitive Interface
 
 Inputs are not commands — they are probabilistic signals:
 
@@ -188,24 +191,11 @@ Inputs are not commands — they are probabilistic signals:
 
 > Interaction = probabilistic intent estimation, not deterministic control.
 
----
-
-# 🎥 9. Media / Streaming Layer (Projection System)
-
-Streaming is not a feature — it is a projection of world-state.
-
-- camera feeds = subgraphs of perception
-- overlays = state annotations
-- clipping = trace selection
-- replay = graph reconstruction
-
-### Homelab becomes:
-
-> a live “production + orchestration renderer” of the world-state graph.
+AR interface acts as the primary output channel.
 
 ---
 
-# 🔁 10. Offline Optimization Loop
+# 🧭 11. Offline Optimization Loop
 
 Separate from runtime:
 
@@ -221,36 +211,103 @@ Separate from runtime:
 
 ---
 
+# 🔀 12. Projections and Channels
+
+The runtime distinguishes between two categories of transformation:
+
+### Projections
+
+Transform graph state into graph state. Internal, durable, composable.
+
+```
+Graph → Projection → Graph
+```
+
+Examples:
+
+```
+Perception → Perception Graph
+Perception Graph → Semantic
+Semantic + User Signals → Intent
+Intent → Execution Graph
+Execution Graph → Memory Graph
+Memory Graph → Knowledge Graph
+```
+
+Classified by determinism level:
+
+- **Deterministic** — fully replayable, identical output for identical input
+- **Probabilistic** — LLM-assisted, carries confidence and model version metadata
+- **Hybrid** — combines deterministic and probabilistic stages
+
+Optimize for: correctness, queryability, persistence, composition.
+
+### Channels
+
+Transform graph state into external representation. Bidirectional boundaries with the outside world.
+
+```
+Graph → Channel → External Surface
+External Surface → Channel → Event
+```
+
+Examples:
+
+```
+Execution Graph → Web UI Channel
+Execution Graph → Discord Channel
+Execution Graph → CLI Channel
+Memory Graph → Search API Channel
+Perception Graph → Streaming Channel
+```
+
+Optimize for: rendering, filtering, sorting, formatting, aggregation.
+
+### Key distinction:
+
+> Projections build runtime knowledge. Channels consume it.
+
+Projections are durable; channels come and go. The same projection graph serves any number of channels without conceptual changes.
+
+---
+
 # 🧭 Final Unified Model
 
-```text
-            ┌────────────────────────┐
-            │   WORLD-STATE GRAPH    │
-            │ (canonical event IR)   │
-            └──────────┬─────────────┘
-                       │
-     ┌─────────────────┼──────────────────┐
-     │                 │                  │
-┌────▼──────┐   ┌──────▼──────┐   ┌──────▼──────┐
-│ Cognitive │   │ Perception  │   │ Interaction │
-│ Kernel    │   │ Nodes       │   │ Layer       │
-└────┬──────┘   └──────┬──────┘   └──────┬──────┘
-     │                 │                 │
-     └──────────┬──────┴──────┬──────────┘
-                │             │
-        ┌───────▼─────────────▼───────┐
-        │  Execution + Trace IR Layer │
-        └──────────┬──────────────────┘
-                   │
-        ┌──────────▼──────────┐
-        │ Macro Optimization  │
-        │ (reversible JIT)    │
-        └──────────┬──────────┘
-                   │
-        ┌──────────▼───────────┐
-        │ Language Adapters    │
-        │ (TS / Go / C++ etc.) │
-        └──────────────────────┘
+```
+World-State Graph (canonical event IR)
+    │
+    ├── Cognitive Kernel
+    ├── Perception Nodes
+    └── Interaction Layer
+            │
+            ▼
+    Execution + Trace IR Layer
+            │
+            ▼
+    Macro Optimization (reversible JIT)
+            │
+            ▼
+    Language Adapters (TS / Go / C++ etc.)
+```
+
+The full transformation flow:
+
+```
+Raw Signals
+    ↓
+Perception Processing → Perception
+    ↓
+Semantic Interpretation → Semantic
+    ↓
+Intent Estimation → Intent
+    ↓
+Projection → Execution Graph
+    ↓
+Projection → Memory Graph
+    ↓
+Projection → Knowledge Graph
+    ↓
+Channel → External Surface (Web, Discord, CLI, API, etc.)
 ```
 
 ---

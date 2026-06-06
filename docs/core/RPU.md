@@ -1,6 +1,6 @@
 # Reasoning Processing Unit (RPU)
 
-> This document expands on the Reasoning Processing Unit section of [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md).
+> This document expands on the Reasoning Processing Unit section (Section 6) of [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md).
 
 ## Overview
 
@@ -9,6 +9,10 @@ The Reasoning Processing Unit (RPU) is a design pattern that treats a Large Lang
 Instead of embedding memory, planning, identity, world state, execution management, and communication into a single prompt, these concerns are externalized into dedicated runtime systems. The model becomes a deterministic cognitive transformation engine operating over structured state.
 
 The objective is not to maximize model intelligence, but to minimize the amount of reasoning required to produce intelligent behavior.
+
+## RPU Applied to Perception
+
+The same RPU pattern governs semantic interpretation in the signal-to-intent pipeline. The model receives structured perception (JSON) along with context and personality state, and produces structured semantic (JSON). Fixed input schema, fixed output schema, no free-form text. The model only ever sees JSON in → JSON out, whether interpreting perception or performing reasoning.
 
 ---
 
@@ -234,7 +238,7 @@ New Events
 
 The event log becomes the canonical source of truth.
 
-The conversation is merely one projection of runtime state.
+The conversation is merely one channel over runtime state — a projection exposed through a communication surface.
 
 ---
 
@@ -258,7 +262,7 @@ Projection
 RPU
 ```
 
-The RPU reasons over structured representations of reality rather than reconstructing reality from conversational history.
+The RPU reasons over structured representations of reality — projections of the event graph — rather than reconstructing reality from conversational history. Channels attach to these projections to expose state to external surfaces.
 
 ---
 
