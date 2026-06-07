@@ -1,36 +1,15 @@
 # Reasoning Processing Unit (RPU)
 
-> This document expands on the Reasoning Processing Unit section (Section 6) of [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md).
+> Expands on the Reasoning Processing Unit section of [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md#6-reasoning-processing-unit).
+> **Audience:** Technical
+> **Prerequisites:** TECHNICAL_CONCEPT.md Sections 1–6, ORCHESTRATION.md
+> **Status:** Complete
 
-## Overview
+## Design Philosophy — Visual
 
-The Reasoning Processing Unit (RPU) is a design pattern that treats a Large Language Model as a specialized reasoning coprocessor rather than as a complete autonomous agent.
+Traditional approach (everything in one prompt):
 
-Instead of embedding memory, planning, identity, world state, execution management, and communication into a single prompt, these concerns are externalized into dedicated runtime systems. The model becomes a deterministic cognitive transformation engine operating over structured state.
-
-The objective is not to maximize model intelligence, but to minimize the amount of reasoning required to produce intelligent behavior.
-
-## RPU Applied to Perception
-
-The same RPU pattern governs semantic interpretation in the signal-to-intent pipeline. The model receives structured perception (JSON) along with context and personality state, and produces structured semantic (JSON). Fixed input schema, fixed output schema, no free-form text. The model only ever sees JSON in → JSON out, whether interpreting perception or performing reasoning.
-
----
-
-## Core Principle
-
-Intelligence is not the amount of reasoning performed.
-
-Intelligence is the ability to accumulate structure so that less reasoning is required in the future.
-
-The RPU architecture therefore seeks to transform repeated reasoning into persistent state, projections, plans, memories, and reusable cognitive artifacts.
-
----
-
-## Design Philosophy
-
-Traditional agent architectures often assume:
-
-```text
+```
 Conversation
 +
 System Prompt
@@ -44,9 +23,9 @@ Personality Instructions
 Agent
 ```
 
-The RPU model instead assumes:
+RPU approach (concerns separated):
 
-```text
+```
 Runtime State
 +
 World State
@@ -60,86 +39,65 @@ Reasoning Function
 Cognitive Result
 ```
 
-The agent is not the model.
+Agent emerges from the interaction between runtime subsystems and reasoning functions.
 
-The agent emerges from the interaction between runtime subsystems and reasoning functions.
+## Cognitive Flow Diagrams
 
----
+### Event-sourced cognition
 
-## RPU Responsibilities
-
-The RPU is responsible for:
-
-- Interpretation
-- Reasoning
-- Synthesis
-- Planning
-- Summarization
-- Reflection
-- Communication generation
-- Cognitive transformations
-
-The RPU is not responsible for:
-
-- Memory persistence
-- Event storage
-- Scheduling
-- State tracking
-- Personality storage
-- Tool orchestration
-- World modeling
-- Execution management
-
-These functions belong to the runtime.
-
----
-
-## Cognitive Contract
-
-Every inference executes through a structured contract.
-
-### Input
-
-```typescript
-interface RPURequest {
-  function: string;
-  objective: string;
-
-  personality: PersonalityState;
-  worldState: WorldState;
-  context: ContextProjection;
-
-  taskState?: TaskState;
-  previousArtifacts?: Artifact[];
-}
+```text
+User Request
+      ↓
+    Event
+      ↓
+  Projection
+      ↓
+    State
+      ↓
+RPU Invocation
+      ↓
+  New Events
 ```
 
-### Output
+### World-state architecture
 
-```typescript
-interface RPUResponse {
-  result: unknown;
-
-  summary?: string;
-  plan?: Plan;
-  memorySuggestions?: MemoryEvent[];
-  stateUpdates?: StateUpdate[];
-  nextActions?: ActionProposal[];
-
-  metadata?: {
-    confidence?: number;
-    reasoningMode?: string;
-  };
-}
+```text
+Sensors
+Memory
+Events
+Tools
+External Systems
+        ↓
+  World State
+        ↓
+  Projection
+        ↓
+    RPU
 ```
 
-The RPU produces structured cognitive artifacts rather than raw conversational text.
+The RPU reasons over structured representations of reality — projections of the event graph — rather than reconstructing reality from conversational history.
 
----
+### Model independence
 
-## Planning-First Execution
+```text
+Runtime
+    ↓
+RPU Contract
+    ↓
+Any Compatible Model
+```
 
-Long-running tasks follow a planning-first workflow.
+### Cognitive cache hierarchy
+
+```text
+L1 - Active Context
+L2 - Structured State
+L3 - World Model
+L4 - Event History
+L5 - Reasoning (RPU)
+```
+
+## Planning-First Execution — Visual
 
 ```text
 User Request
@@ -155,28 +113,7 @@ Recap
 Conversation Response
 ```
 
-The plan becomes an observable runtime artifact.
-
-Execution updates the plan state rather than generating arbitrary conversational messages.
-
-This creates deterministic visibility into system progress.
-
----
-
-## Recap-Based Observability
-
-The runtime maintains execution state independently from the conversation.
-
-Users may request:
-
-- Current status
-- Task progress
-- Plan state
-- Execution recap
-
-The response is generated from runtime projections rather than reconstructed from conversation history.
-
-Example:
+## Recap Example
 
 ```text
 Task: Research Topic X
@@ -188,137 +125,162 @@ Plan:
 □ Final Review
 ```
 
-This avoids using conversational messages as the source of truth.
+Status markers: ✓ complete, ⟳ in progress, □ pending.
 
----
+## RPU Contract Specification
 
-## Personality as State
+### Request Schema
 
-Personality is stored as structured data rather than prompt text.
+Every RPU invocation follows a structured contract. The kernel constructs the request from world-state projections; the RPU returns structured results.
 
-```json
-{
-  "curiosity": 0.9,
-  "humor": 0.4,
-  "technicalDepth": 0.95,
-  "directness": 0.8
+```typescript
+interface RPURequest {
+  function: string; // The reasoning function to execute
+  objective: string; // What success looks like
+  personality: PersonalityState;
+  worldState: WorldState;
+  context: ContextProjection;
+  taskState?: TaskState;
+  previousArtifacts?: Artifact[];
+  recentExecution?: {
+    // From macro execution (MACROS.md)
+    hint: string;
+    toolResult: unknown;
+  }[];
 }
 ```
 
-The runtime owns personality.
+### Response Schema
 
-The RPU consumes personality projections.
-
-This allows:
-
-- Model replacement
-- Personality versioning
-- Personality evolution
-- Consistent behavior across backends
-
----
-
-## Event-Sourced Cognition
-
-All runtime actions generate events.
-
-```text
-User Request
-      ↓
-Event
-      ↓
-Projection
-      ↓
-State
-      ↓
-RPU Invocation
-      ↓
-New Events
+```typescript
+interface RPUResponse {
+  result: unknown; // Primary output of the reasoning function
+  summary?: string; // Human-readable summary
+  plan?: Plan; // Proposed execution plan
+  memorySuggestions?: MemoryEvent[];
+  stateUpdates?: StateUpdate[];
+  nextActions?: ActionProposal[];
+  metadata?: {
+    confidence?: number; // 0.0–1.0, calibrated against actual correctness
+    reasoningMode?: string; // e.g., "analytical", "creative", "recall"
+    modelVersion?: string; // For debugging probabilistic projections
+    tokenUsage?: {
+      // For cost tracking
+      input: number;
+      output: number;
+    };
+  };
+}
 ```
 
-The event log becomes the canonical source of truth.
+### Latency Budgets
 
-The conversation is merely one channel over runtime state — a projection exposed through a communication surface.
+Expected response times per function type:
+
+| Function Type                | Expected Latency | Timeout     | Priority Tier |
+| ---------------------------- | ---------------- | ----------- | ------------- |
+| Situation model generation   | 2–5 seconds      | 10 seconds  | Interactive   |
+| Plan generation              | 5–15 seconds     | 30 seconds  | Interactive   |
+| Summarization                | 10–30 seconds    | 60 seconds  | Background    |
+| Knowledge validation         | 5–20 seconds     | 30 seconds  | Background    |
+| Conversation response        | 1–3 seconds      | 5 seconds   | Interactive   |
+| Macro compilation assistance | 15–60 seconds    | 120 seconds | Background    |
+
+These budgets assume a modern LLM (GPT-4-class or equivalent). Smaller models may have different latency profiles; the kernel adapts timeouts based on observed model performance.
+
+## Error Handling Model
+
+### Malformed Output
+
+When the RPU returns output that does not conform to the expected schema:
+
+1. **Validation failure is logged** as an event in the execution graph with the raw output preserved for debugging.
+2. **The kernel retries** with a corrected prompt that includes the validation error message (max 2 retries).
+3. **If retries fail**, the chain is marked as failed with an "RPU validation error" status. The kernel falls back to rule-based heuristics if available.
+4. **The model version and request context** are recorded for post-mortem analysis.
+
+### Timeout
+
+When the RPU does not respond within the allocated timeout:
+
+1. **The request is cancelled** at the provider level (if the provider supports cancellation).
+2. **The chain is parked** and can be resumed when the RPU becomes available.
+3. **If the chain is time-sensitive** (interactive priority), the kernel falls back to a cached or heuristic response.
+4. **Timeout events** are recorded and contribute to model reliability metrics.
+
+### Model Failure
+
+When the RPU provider is unavailable or returns an error:
+
+1. **The LLM Runtime adapter** (TECHNICAL_CONCEPT.md Section 6.9) attempts to route to an alternative provider if configured.
+2. **If no alternative is available**, the chain is parked with a "model unavailable" status.
+3. **Critical chains** that require immediate reasoning escalate to the user with a "reasoning unavailable" notification.
+4. **The failure is recorded** and contributes to provider reliability metrics.
+
+### Confidence Score Semantics
+
+The RPU returns a confidence score (0.0–1.0) with each response. This score represents the model's estimated probability that the response is correct and complete.
+
+| Confidence Range | Interpretation      | Kernel Action                                              |
+| ---------------- | ------------------- | ---------------------------------------------------------- |
+| 0.9–1.0          | High confidence     | Accept and proceed                                         |
+| 0.7–0.9          | Moderate confidence | Accept but flag for review; may request additional context |
+| 0.5–0.7          | Low confidence      | Request additional context or fall back to heuristic       |
+| Below 0.5        | Very low confidence | Reject; fall back to heuristic or escalate to user         |
+
+Confidence scores are calibrated over time by comparing them against actual correctness (determined by user feedback, validation tests, or downstream success). The calibration curve is stored as a projection and used to adjust raw confidence scores before kernel decision-making.
+
+## Model Versioning Strategy
+
+### Version Pinning
+
+Each RPU invocation records the model version used. This enables:
+
+- **Replayability:** Probabilistic projections can be replayed with the same model version to reproduce results.
+- **A/B testing:** Different model versions can be compared on the same tasks.
+- **Rollback:** If a model version performs poorly, the kernel can pin to a previous version.
+
+### Version Format
+
+Model versions are identified by a structured string: `provider:model:version` (e.g., `openai:gpt-4:2024-04-09`). The LLM Runtime normalizes provider-specific version formats into this canonical form.
+
+### Model Swap Procedure
+
+When switching to a new model:
+
+1. **The new model is tested** against a benchmark suite of canonical tasks.
+2. **Confidence calibration is rebuilt** for the new model (confidence scores are model-specific).
+3. **Latency budgets are adjusted** based on observed performance.
+4. **The swap is recorded** as an event; all subsequent invocations use the new version.
+5. **The old version remains available** for replay and comparison.
+
+## Fallback Behavior
+
+When the RPU is unavailable, the system degrades gracefully:
+
+| Component                  | Fallback                                       |
+| -------------------------- | ---------------------------------------------- |
+| Situation model generation | Rule-based heuristics from perception features |
+| Plan generation            | Template-based plans from task type            |
+| Summarization              | Deterministic aggregation (no LLM)             |
+| Knowledge validation       | Statistical corroboration (no LLM)             |
+| Conversation response      | Pre-built response templates                   |
+| Macro compilation          | Deferred until RPU available                   |
+
+The fallback behavior is less capable but maintains system safety and core functionality. This is consistent with the "graceful degradation is mandatory" invariant.
+
+## Rate Limiting and Quota Enforcement
+
+The kernel enforces RPU usage quotas:
+
+- **Per-chain quota:** Each execution chain has a token budget. If the budget is exceeded, the chain is paused and requires user approval to continue.
+- **Per-time-window quota:** The system tracks total RPU usage over configurable time windows (default: 1 hour). If the window quota is exceeded, non-critical chains are parked until the window resets.
+- **Cost-aware scheduling:** The scheduler considers estimated token cost when allocating RPU capacity. High-cost functions are scheduled during low-demand periods when possible.
+
+## Closing Principle
+
+Intelligent behavior emerges from accumulated structure rather than repeated inference.
 
 ---
 
-## World-State Architecture
-
-The context window is not treated as the world.
-
-Instead:
-
-```text
-Sensors
-Memory
-Events
-Tools
-External Systems
-        ↓
-World State
-        ↓
-Projection
-        ↓
-RPU
-```
-
-The RPU reasons over structured representations of reality — projections of the event graph — rather than reconstructing reality from conversational history. Channels attach to these projections to expose state to external surfaces.
-
----
-
-## Model Independence
-
-The RPU abstraction enables model interchangeability.
-
-The runtime defines:
-
-- State
-- Contracts
-- Events
-- Personality
-- Memory
-- Scheduling
-
-The model only implements reasoning functions.
-
-```text
-Runtime
-    ↓
-RPU Contract
-    ↓
-Any Compatible Model
-```
-
-This allows multiple model classes to participate in the same cognitive runtime.
-
----
-
-## Cognitive Cache Hierarchy
-
-The architecture can be viewed as a hierarchy of increasingly expensive cognitive operations.
-
-```text
-L1 - Active Context
-L2 - Structured State
-L3 - World Model
-L4 - Event History
-L5 - Reasoning (RPU)
-```
-
-Reasoning is the most expensive resource.
-
-The purpose of the runtime is to convert reasoning into reusable structure and prevent unnecessary recomputation.
-
----
-
-## Guiding Question
-
-The central design question of the RPU architecture is:
-
-"What can be removed from the reasoning loop?"
-
-Any responsibility that can be represented as deterministic state, stored structure, or runtime infrastructure should be externalized from the model.
-
-The RPU should only perform transformations that genuinely require reasoning.
-
-This allows intelligent behavior to emerge from accumulated structure rather than repeated inference.
+**Related:** [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md#6-reasoning-processing-unit) for the original specification. [ORCHESTRATION.md](ORCHESTRATION.md#core-primitives--semantic-specifications) for the execution primitives the RPU operates within. [MACROS.md](MACROS.md#context-window-integration) for how RPU-assisted macro compilation works.

@@ -1,44 +1,124 @@
 # Macro System
 
-> This document expands on the Macro System section (Section 8.1) of [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md).
+> Expands on the Macro System section of [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md#91-macro-system).
 
 ## What Macros Are
 
-Macros are Effect-style function definitions that compose Tool Services through semantic orchestration primitives. Individual tool calls are exposed as service methods; macros combine them with conditional logic to capture reasoning and tool usage patterns.
+Macros are compiled execution subgraphs that capture repeated behavior as deterministic conditional logic and tool calls, annotated with Reasoning Hints.
 
-Macros use Tool Services only — they never use Application Services.
+A macro is not a reasoning engine. It does not yield, pause, or resume into general reasoning. It executes to completion as a deterministic piece of the execution graph.
 
-Macros are runtime-only — they execute in the TypeScript/Effect runtime and are not transpiled.
+## Reasoning Hints
 
-## Discovery → Validation → Compilation → Demotion
+A Reasoning Hint is a distilled textual annotation written by the model during macro compilation. It captures the outcome of a reasoning step at a branch point, not the full chain-of-thought that produced it.
 
-Repeated execution patterns are detected through sliding window mining over event streams, subgraph matching in trace graphs, and normalization of tool calls. The macro system operates as a reversible execution compression pipeline.
+Example from a compiled macro:
 
-The process follows four steps:
+```
+If budget >= item.cost:
+  Hint: "Budget allows for this item, proceeding with purchase"
+  Tool: purchase(item)
 
-1. **Propose** — a macro is proposed, assisted by LLM analysis of trace patterns
-2. **Validate** — tested against historical execution data
-3. **Compile** — once validated, compiled into a reusable execution unit
-4. **Demote** — can be demoted if it falls out of use or if underlying primitives change
+If budget < item.cost:
+  Hint: "Budget insufficient for this item, skipping"
+  Tool: skip(item)
+```
 
-Macros are compiled execution subgraphs, not behavior overrides. They are an optimization layer for execution efficiency and reliability. They never replace primitives, and they remain fully reversible.
+Hints serve three purposes:
 
-## Macros as Compiled Commit Ranges
+1. **Provenance** — when auditing a macro execution, the hint chain explains why each branch was taken without reconstructing the original reasoning.
+2. **Context injection** — hints and tool results from recent macro execution form a sliding window passed to the RPU when the kernel invokes it for new reasoning.
+3. **Future learning** — the hint chain gives future macro discovery passes semantic context to work with, not just tool-call sequences.
 
-Frequently occurring subgraphs are identified, validated, and compiled. A macro can always be expanded back into its originating events. This guarantees that no behavior is ever hidden behind macro abstraction — the full provenance chain remains accessible.
+### Properties
 
-## Promotion Criteria
+**Distilled** — a hint captures the outcome of reasoning, not the reasoning process itself. It is a concise explanation of why a decision was made.
 
-Not every repeated pattern should become a macro. A pattern is promoted only when it meets multiple criteria:
+**Parameterized** — concrete values from the original execution become variables, allowing the same macro to generalize across different situations.
 
-- **Frequency** — the pattern occurs often enough that compilation yields measurable efficiency gains
-- **Success rate** — the pattern completes successfully across diverse contexts, not just in narrow conditions
-- **Stability** — the underlying primitives and data shapes are unlikely to change in ways that would invalidate the macro
-- **Cost savings** — the macro reduces compute time, token usage, or resource consumption compared to raw execution
-- **Semantic equivalence** — the macro's behavior is functionally identical to the original pattern, not an approximation
+```
+If distance <= {max_distance}:
+  Hint: "Target within {max_distance} km, using local search"
+  Tool: search_local(target)
+```
 
-These criteria prevent the system from generating mountains of garbage macros — low-frequency, brittle, or marginally useful patterns that add complexity without value.
+**Immutable** — once a macro is validated, its hints become part of the macro's commit range. They are not regenerated during execution.
 
-## Discovery as an Open Problem
+**Expandable** — a macro always preserves the link to its originating events. No behavior is hidden behind abstraction.
 
-Detecting useful reusable patterns is fundamentally difficult. The macro system's discovery mechanism is an active area of development. The criteria above provide a starting framework, but the actual mining algorithms, subgraph matching strategies, and semantic equivalence detection remain open research questions. The system is designed to evolve its discovery mechanism without changing the macro compilation, validation, or execution model.
+## Discovery Mechanisms
+
+### Sliding Window Mining
+
+The system scans execution traces through a sliding time window (configurable, default 24 hours). Within each window, it identifies repeated sequences of tool calls, RPU invocations, and scheduler decisions. The window slides forward in increments (default 1 hour) to catch patterns that span window boundaries.
+
+Normalization is applied before comparison: variable identifiers are replaced with type placeholders, timestamps are converted to relative offsets, and confidence scores are bucketed into ranges. This prevents superficial differences from masking structural similarity.
+
+### Subgraph Matching
+
+Execution traces are represented as directed graphs where nodes are actions (tool calls, RPU invocations, state transitions) and edges are causal dependencies. The mining algorithm searches for frequently occurring subgraphs using a variant of the gSpan algorithm adapted for execution traces.
+
+Key adaptations:
+
+- Nodes carry typed payloads (tool name, RPU function, state update type) rather than simple labels
+- Edges carry temporal offsets and priority context
+- Subgraph frequency is weighted by recency — patterns that occurred recently are more valuable than patterns from months ago
+- Semantic equivalence is checked at the payload level, not just the graph structure
+
+### Pattern Normalization and Hint Extraction
+
+Before a pattern can be promoted, it must be normalized into a reusable form:
+
+1. Concrete values are replaced with parameters
+2. Fixed tool references are generalized to service abstractions
+3. Hardcoded thresholds become configurable parameters
+4. Branch conditions are extracted as decision points
+5. The model distills the reasoning at each branch point into a Reasoning Hint
+
+This normalization is assisted by LLM analysis of the trace patterns, but the resulting macro is validated deterministically.
+
+## Context Window Integration
+
+When a macro completes and the kernel decides to invoke the RPU for new reasoning, the RPU receives a sliding window of recent execution context. This window contains the most recent hint/tool-result pairs from the macro's execution:
+
+```typescript
+interface RPURequest {
+  function: string;
+  objective: string;
+  personality: PersonalityState;
+  worldState: WorldState;
+  context: ContextProjection;
+  recentExecution: {
+    hint: string;
+    toolResult: unknown;
+  }[];
+  taskState?: TaskState;
+  previousArtifacts?: Artifact[];
+}
+```
+
+This gives the RPU local awareness of what just happened and why, alongside targeted memories from the memory graph and validated facts from the knowledge graph. The window is bounded so it doesn't inflate context size unnecessarily — only recent decisions matter for immediate next-step reasoning.
+
+## Validation Test Design
+
+A proposed macro is validated against historical execution data. The test process:
+
+1. **Replay** — the macro is executed against the same input traces that originally produced the pattern
+2. **Equivalence check** — the macro's output is compared to the original execution output at the semantic level (not byte-for-byte, but functionally equivalent)
+3. **Edge case testing** — the macro is tested against variations of the original traces: missing inputs, different tool responses, priority conflicts
+4. **Performance measurement** — the macro's resource consumption is measured against the original execution to confirm cost savings
+
+A macro passes validation only when it produces semantically equivalent results across all test traces and demonstrates measurable efficiency gains.
+
+## Demotion Mechanics
+
+A macro can be demoted for several reasons:
+
+- **Usage decay** — the macro is not invoked for a configurable period (default 30 days)
+- **Primitive change** — an underlying tool or service that the macro depends on has changed its contract
+- **Failure rate increase** — the macro's success rate drops below a threshold due to environmental changes
+- **Better replacement** — a more general macro subsumes the functionality of the existing macro
+
+Demotion is reversible. A demoted macro remains in the macro graph with a `demoted` status. It can be re-promoted if conditions change. The full provenance chain — from original trace events through macro proposal, validation, compilation, and demotion — is preserved.
+
+Demoted macros are excluded from the scheduler's macro lookup but remain accessible for audit and re-evaluation.
