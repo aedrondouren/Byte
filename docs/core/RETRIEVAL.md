@@ -290,5 +290,5 @@ Channels are responsible for their own caching of world-state projections. The r
 - [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md) — Memory graph, knowledge graph, RPU contract
 - [ENTITIES.md](ENTITIES.md) — Entity permissions, trust levels
 - [CHANNELS.md](CHANNELS.md) — Channel policies, entity binding
-- [RPU.md](../core/RPU.md) — RPU request/response schema
-- [GRAPH.md](../core/GRAPH.md) — Indexing strategy, query complexity
+- [RPU.md](RPU.md) — RPU request/response schema
+- [GRAPH.md](GRAPH.md) — Indexing strategy, query complexity

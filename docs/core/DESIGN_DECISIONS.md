@@ -93,7 +93,7 @@ This document explains why the architecture makes the choices it does. Each deci
 - Effect.ts provides a comprehensive, well-tested set of semantic primitives (run, fork, parallel, race, scope, acquire/release, etc.) that map closely to the orchestration layer's requirements.
 - TypeScript's type system provides compile-time guarantees about primitive composition.
 - Effect's layer/context system provides the dependency injection model needed for Tool Services and Application Services.
-- TypeScript + Effect transpiles nearly 1:1 to Go (REGISTRY.md), enabling cross-language composition.
+- TypeScript + Effect transpiles nearly 1:1 to Go ([REGISTRY.md](REGISTRY.md)), enabling cross-language composition.
 - The choice is about semantics, not implementation. The primitives are language-agnostic; TypeScript + Effect is the reference.
 
 ---
