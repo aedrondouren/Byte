@@ -137,21 +137,19 @@ The seven logical graphs are split across two data stores, reflecting two fundam
 
 ```
 World-State Event Store (append-only, content-addressed)
-    │
-    ├── Perception projection  ── what happened
-    ├── Execution projection   ── what was done
-    ├── Memory projection      ── what was experienced
-    └── Knowledge projection   ── what is known
+├── Perception projection  ── what happened
+├── Execution projection   ── what was done
+├── Memory projection      ── what was experienced
+└── Knowledge projection   ── what is known
 ```
 
 **Artifact Version Store** — content-addressed, semantically versioned, lifecycle-managed. State is the latest version per artifact. Three graphs use this store:
 
 ```
 Artifact Version Store (content-addressed, semantically versioned)
-    │
-    ├── Macro Graph     ── compiled execution patterns
-    ├── Skill Registry  ── pre-authored behavior definitions
-    └── Code Registry   ── tested code components
+├── Macro Graph     ── compiled execution patterns
+├── Skill Registry  ── pre-authored behavior definitions
+└── Code Registry   ── tested code components
 ```
 
 Each store maintains its own indexing strategy, retention policies, and query patterns. Cross-store references use content hashes in events pointing to artifact ID+version — no unified index is needed. An event in the world-state store references an artifact like `macro_used: macro_weather_check:v3.1.0`. An artifact in the version store references events for provenance like `provenance: { source_events: [evt_abc, evt_def, ...] }`.
@@ -1022,9 +1020,9 @@ Macros can reference other macros as child subgraph components. Since the execut
 
 ```
 Macro: morning_routine
-    ├── Macro: weather_check (child subgraph reference)
-    ├── Macro: calendar_briefing (child subgraph reference)
-    └── Macro: news_summary (child subgraph reference)
+├── Macro: weather_check (child subgraph reference)
+├── Macro: calendar_briefing (child subgraph reference)
+└── Macro: news_summary (child subgraph reference)
 ```
 
 **Discovery paths.** Bottom-up: leaf macros (tool-call patterns) are discovered first due to higher frequency; later, the system detects that certain leaf macros are invoked together repeatedly and proposes a parent macro. Top-down: a flat macro is discovered first; during normalization, the system identifies reusable sub-patterns and extracts them as child macros (analogous to "extract function" refactoring).

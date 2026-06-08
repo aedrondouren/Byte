@@ -264,39 +264,38 @@
 ## Trust Boundary Summary
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  UNTRUSTED                                                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
-│  │ LLM Provider │  │ External APIs│  │ Unapproved   │       │
-│  │ (compromised)│  │ (compromised)│  │ Channels     │       │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘       │
-│         │ normalized      │ filtered        │ no processing  │
-│         │ requests only   │ views only      │                │
-├─────────┼─────────────────┼─────────────────┼────────────────┤
-│  PENDING                  │                 │                │
-│  ┌─────────┴─────────────┴─────────────────┴──────────┐    │
-│  │  Pending Channels (awaiting Admin approval)         │    │
-│  │  ↓ no event processing, no graph access             │    │
-├──┼─────────────────────────────────────────────────────┼────┤
-│  │  SEMI-TRUSTED                                       │    │
-│  │  ┌───────────────────────────────────────────────┐  │    │
-│  │  │  Sub-Users (Admin-elevated external entities)  │  │    │
-│  │  │  ↓ domain-restricted, privacy-capped           │  │    │
-│  │  │  Edge Node (PEN)                               │  │    │
-│  │  │  ↓ structured events only                      │  │    │
-│  │  └───────────────────────────────────────────────┘  │    │
-├──┼─────────────────────────────────────────────────────┼────┤
-│  │  TRUSTED                                            │    │
-│  │  ┌───────────────────────────────────────────────┐  │    │
-│  │  │  Admin (primary webUI + merged identities)     │  │    │
-│  │  │  ↓ full access, all domains, all privacy       │  │    │
-│  │  │  Homelab (Trusted Core)                        │  │    │
-│  │  │  Event Store + Kernel + Memory + Knowledge     │  │    │
-│  │  │  All execution validated, all events hashed    │  │    │
-│  │  └───────────────────────────────────────────────┘  │    │
-└──┼─────────────────────────────────────────────────────┼────┘
-   │                                                     │
-   ▼                                                     ▼
+┌─────────────────────────────────────────────────────────┐
+│ UNTRUSTED                                               │
+│  ┌───────────────┐  ┌───────────────┐  ┌─────────────┐  │
+│  │ LLM Provider  │  │ External APIs │  │ Unapproved  │  │
+│  │ (compromised) │  │ (compromised) │  │ Channels    │  │
+│  └───────┬───────┘  └───────┬───────┘  └──────┬──────┘  │
+│     normalized          filtered        no processing   │
+│     requests only       views only            │         │
+├──────────┼──────────────────┼─────────────────┼─────────┤
+│ PENDING  │                  │                 │         │
+│  ┌───────┴──────────────────┴─────────────────┴──────┐  │
+│  │ Pending Channels (awaiting Admin approval)        │  │
+│  │ ↓ no event processing, no graph access            │  │
+├──┼───────────────────────────────────────────────────┼──┤
+│  │ SEMI-TRUSTED                                      │  │
+│  │  ┌─────────────────────────────────────────────┐  │  │
+│  │  │ Sub-Users (elevated external entities)      │  │  │
+│  │  │ ↓ domain-restricted, privacy-capped         │  │  │
+│  │  │ Edge Node (PEN)                             │  │  │
+│  │  │ ↓ structured events only                    │  │  │
+│  │  └─────────────────────────────────────────────┘  │  │
+├──┼───────────────────────────────────────────────────┼──┤
+│  │ TRUSTED                                           │  │
+│  │  ┌─────────────────────────────────────────────┐  │  │
+│  │  │ Admin (primary webUI + merged identities)   │  │  │
+│  │  │ ↓ full access, all domains, all privacy     │  │  │
+│  │  │ Homelab (Trusted Core)                      │  │  │
+│  │  │ ↓ Event Store + Kernel + Memory + Knowledge │  │  │
+│  │  │ All execution validated, all events hashed  │  │  │
+│  │  └─────────────────────────────────────────────┘  │  │
+└──┴───────────────────────────────────────────────────┴──┘
+
 Trust flows: Admin approves channels -> channels bind to entities ->
 entities have permissions -> permissions filter retrieval
 ```

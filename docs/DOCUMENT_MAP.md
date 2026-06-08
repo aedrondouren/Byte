@@ -10,31 +10,25 @@
 
 ```
 START_HERE.md (entry point)
-    │
-    ├──→ CONCEPTUAL_OVERVIEW.md (plain-language)
-    │       │
-    │       └──→ REFERENCE.md (glossary)
-    │
-    └──→ README.md (project overview)
-            │
-            ├──→ TECHNICAL_CONCEPT.md (core specification, Sections 1–18)
-            │       │
-            │       ├──→ core/GRAPH.md (world-state graph)
-            │       ├──→ core/RPU.md (reasoning coprocessor)
-            │       ├──→ core/ORCHESTRATION.md (execution primitives)
-            │       ├──→ core/MACROS.md (macro system)
-            │       ├──→ core/REGISTRY.md (code registry)
-            │       ├──→ core/EDGE_ARCHITECTURE.md (edge node)
-            │       ├──→ core/MULTIMODAL_INTERFACE.md (multimodal input)
-            │       ├──→ core/OFFLINE_OPTIMIZATION.md (background loop)
-            │       ├──→ core/SECURITY.md (security & privacy)
-            │       ├──→ core/EVALUATION.md (evaluation methodology)
-            │       ├──→ core/KNOWN_GAPS.md (open problems)
-            │       ├──→ core/DESIGN_DECISIONS.md (rationale)
-            │       ├──→ core/THREAT_MODEL.md (threat analysis)
-            │       └──→ core/ARCHITECTURE_DIAGRAMS.md (flow diagrams)
-            │
-            └──→ REFERENCE.md (glossary)
+├──→ CONCEPTUAL_OVERVIEW.md (plain-language)
+│   └──→ REFERENCE.md (glossary)
+└──→ README.md (project overview)
+    ├──→ TECHNICAL_CONCEPT.md (core specification, Sections 1–18)
+    │   ├──→ core/GRAPH.md (world-state graph)
+    │   ├──→ core/RPU.md (reasoning coprocessor)
+    │   ├──→ core/ORCHESTRATION.md (execution primitives)
+    │   ├──→ core/MACROS.md (macro system)
+    │   ├──→ core/REGISTRY.md (code registry)
+    │   ├──→ core/EDGE_ARCHITECTURE.md (edge node)
+    │   ├──→ core/MULTIMODAL_INTERFACE.md (multimodal input)
+    │   ├──→ core/OFFLINE_OPTIMIZATION.md (background loop)
+    │   ├──→ core/SECURITY.md (security & privacy)
+    │   ├──→ core/EVALUATION.md (evaluation methodology)
+    │   ├──→ core/KNOWN_GAPS.md (open problems)
+    │   ├──→ core/DESIGN_DECISIONS.md (rationale)
+    │   ├──→ core/THREAT_MODEL.md (threat analysis)
+    │   └──→ core/ARCHITECTURE_DIAGRAMS.md (flow diagrams)
+    └──→ REFERENCE.md (glossary)
 ```
 
 ---

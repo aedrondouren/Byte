@@ -115,34 +115,34 @@ Control signal authority requires explicit enablement (default: disabled).
 ### Trust Hierarchy
 
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│  UNTRUSTED                                                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
-│  │ LLM Provider │  │ External APIs│  │ Unapproved   │       │
-│  │              │  │              │  │ Channels     │       │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘       │
-├─────────┼─────────────────┼─────────────────┼────────────────┤
-│  PENDING                 │                 │                │
-│  ┌─────────┴─────────────┴─────────────────┴──────────┐    │
-│  │  Pending Channels (awaiting Admin approval)         │    │
-│  │  ↓ no event processing, no graph access             │    │
-├──┼─────────────────────────────────────────────────────┼────┤
-│  │  SEMI-TRUSTED                                       │    │
-│  │  ┌───────────────────────────────────────────────┐  │    │
-│  │  │  Sub-Users (Admin-elevated external entities)  │  │    │
-│  │  │  ↓ domain-restricted, privacy-capped           │  │    │
-│  │  │  Edge Node (PEN)                               │  │    │
-│  │  │  ↓ structured events only                      │  │    │
-│  │  └───────────────────────────────────────────────┘  │    │
-├──┼─────────────────────────────────────────────────────┼────┤
-│  │  TRUSTED                                            │    │
-│  │  ┌───────────────────────────────────────────────┐  │    │
-│  │  │  Admin (primary webUI + merged identities)     │  │    │
-│  │  │  ↓ full access, all domains, all privacy       │  │    │
-│  │  │  Homelab (Trusted Core)                        │  │    │
-│  │  │  ↓ Event Store + Kernel + Memory + Knowledge   │  │    │
-│  │  └───────────────────────────────────────────────┘  │    │
-└──┼─────────────────────────────────────────────────────┼────┘
+┌─────────────────────────────────────────────────────────┐
+│ UNTRUSTED                                               │
+│  ┌───────────────┐  ┌───────────────┐  ┌─────────────┐  │
+│  │ LLM Provider  │  │ External APIs │  │ Unapproved  │  │
+│  │               │  │               │  │ Channels    │  │
+│  └───────┬───────┘  └───────┬───────┘  └──────┬──────┘  │
+├──────────┼──────────────────┼─────────────────┼─────────┤
+│ PENDING  │                  │                 │         │
+│  ┌───────┴──────────────────┴─────────────────┴──────┐  │
+│  │ Pending Channels (awaiting Admin approval)        │  │
+│  │ ↓ no event processing, no graph access            │  │
+├──┼───────────────────────────────────────────────────┼──┤
+│  │ SEMI-TRUSTED                                      │  │
+│  │  ┌─────────────────────────────────────────────┐  │  │
+│  │  │ Sub-Users (elevated external entities)      │  │  │
+│  │  │ ↓ domain-restricted, privacy-capped         │  │  │
+│  │  │ Edge Node (PEN)                             │  │  │
+│  │  │ ↓ structured events only                    │  │  │
+│  │  └─────────────────────────────────────────────┘  │  │
+├──┼───────────────────────────────────────────────────┼──┤
+│  │ TRUSTED                                           │  │
+│  │  ┌─────────────────────────────────────────────┐  │  │
+│  │  │ Admin (primary webUI + merged identities)   │  │  │
+│  │  │ ↓ full access, all domains, all privacy     │  │  │
+│  │  │ Homelab (Trusted Core)                      │  │  │
+│  │  │ ↓ Event Store + Kernel + Memory + Knowledge │  │  │
+│  │  └─────────────────────────────────────────────┘  │  │
+└──┴───────────────────────────────────────────────────┴──┘
 ````
 
 Trust flows: Admin approves channels -> channels bind to entities ->

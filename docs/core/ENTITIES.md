@@ -218,9 +218,8 @@ Each entity has a primary identity (the channel and identifier through which it 
 Entity: Admin
 ├── primary_identity: { channel: "webui_primary", id: "bootstrap" }
 ├── merged_identities: [
-│   { channel: "discord", id: "@admin_user", merged_at: "...", merged_by: "admin" },
-│   { channel: "voice", id: "voice_print_abc", merged_at: "...", merged_by: "admin" },
-]
+│       { channel: "discord", id: "@admin_user", merged_at: "...", merged_by: "admin" },
+│       { channel: "voice", id: "voice_print_abc", merged_at: "...", merged_by: "admin" }]
 └── trust_level: admin
 ```
 

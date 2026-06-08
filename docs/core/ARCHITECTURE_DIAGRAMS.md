@@ -19,7 +19,7 @@ Intent Estimation → Intent
 Projection → Execution Graph
     ↓                                    ↗
 Projection → Memory Graph               │ (skill execution traces, if skills installed)
-    ↓                                    │
+    ↓                                   │
 Projection → Knowledge Graph ←──────────┘
     │                    ↗
     ├── Temporal Patterns → Temporal Intent → Intent (feedback loop)
@@ -27,16 +27,16 @@ Projection → Knowledge Graph ←──────────┘
     └── Channel → External Surface (Web, Discord, CLI, API, etc.)
 
 ┌──────────────────────────────────────────────────────────┐
-│  World-State Event Store (append-only, content-addressed) │
-│  Perception Graph → Execution Graph → Memory Graph       │
-│  → Knowledge Graph                                        │
+│ World-State Event Store (append-only, content-addressed) │
+│ Perception Graph → Execution Graph → Memory Graph        │
+│ → Knowledge Graph                                        │
 └──────────────────────┬───────────────────────────────────┘
                        │ content hash → artifact ID+version
 ┌──────────────────────▼───────────────────────────────────┐
-│  Artifact Version Store (content-addressed, versioned)    │
-│  Macro Graph (skill-derived + pattern-derived)            │
-│  Skill Registry                                           │
-│  Code Registry                                            │
+│ Artifact Version Store (content-addressed, versioned)    │
+│ Macro Graph (skill-derived + pattern-derived)            │
+│ Skill Registry                                           │
+│ Code Registry                                            │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -44,31 +44,31 @@ Projection → Knowledge Graph ←──────────┘
 
 ```
 ┌─────────────────────────────────────────┐
-│         World-State Event Store          │
-│  Append-only, content-addressed events   │
-│  State = projection of event history     │
-│                                          │
-│  Perception Graph  ── what happened      │
-│  Execution Graph   ── what was done      │
-│  Memory Graph      ── what was felt      │
-│  Knowledge Graph   ── what is known      │
-│                                          │
-│  Queries: temporal, causal, semantic     │
-│  Retention: time-window based, archival  │
+│        World-State Event Store          │
+│ Append-only, content-addressed events   │
+│ State = projection of event history     │
+│                                         │
+│ Perception Graph  ── what happened      │
+│ Execution Graph   ── what was done      │
+│ Memory Graph      ── what was felt      │
+│ Knowledge Graph   ── what is known      │
+│                                         │
+│ Queries: temporal, causal, semantic     │
+│ Retention: time-window based, archival  │
 └──────────────────┬──────────────────────┘
                    │ content hash → artifact ID+version
 ┌──────────────────▼──────────────────────┐
-│         Artifact Version Store           │
-│  Content-addressed, semantically         │
-│  versioned, lifecycle-managed            │
-│  State = latest version per artifact     │
-│                                          │
-│  Macro Graph     ── compiled patterns    │
-│  Skill Registry  ── authored behaviors   │
-│  Code Registry   ── tested components    │
-│                                          │
-│  Queries: identity, version, capability  │
-│  Retention: reference-based, no archival │
+│        Artifact Version Store           │
+│ Content-addressed, semantically         │
+│ versioned, lifecycle-managed            │
+│ State = latest version per artifact     │
+│                                         │
+│ Macro Graph     ── compiled patterns    │
+│ Skill Registry  ── authored behaviors   │
+│ Code Registry   ── tested components    │
+│                                         │
+│ Queries: identity, version, capability  │
+│ Retention: reference-based, no archival │
 └─────────────────────────────────────────┘
 ```
 
@@ -196,15 +196,15 @@ New macro proposed from v1.1 traces → validated → promoted
 
 ```
 Macro: morning_routine (parent)
-    ├── Macro: weather_check (child subgraph reference)
-    │       └── Tool: fetch_weather
-    │       └── Tool: format_response
-    ├── Macro: calendar_briefing (child subgraph reference)
-    │       └── Tool: fetch_calendar
-    │       └── Tool: format_summary
-    └── Macro: news_summary (child subgraph reference)
-            └── Tool: fetch_news
-            └── Tool: rank_by_interest
+├── Macro: weather_check (child subgraph reference)
+│   └── Tool: fetch_weather
+│   └── Tool: format_response
+├── Macro: calendar_briefing (child subgraph reference)
+│   └── Tool: fetch_calendar
+│   └── Tool: format_summary
+└── Macro: news_summary (child subgraph reference)
+    └── Tool: fetch_news
+    └── Tool: rank_by_interest
 
 At execution time: child macros are inlined into parent's sequence.
 No runtime call stack — just sequential/parallel event execution.
@@ -224,20 +224,20 @@ L5 — Reasoning (RPU)     (slowest, most expensive to invoke)
 ## Edge-Cloud Separation
 
 ```
-Edge Node                          Homelab
-┌──────────────────┐               ┌──────────────────────────┐
-│ Perception       │  structured   │  Stores + Kernel + RPU   │
-│ Processing       │──events──────▶│  + Orchestration         │
-│ Local Inference  │◀─requests─────│  + Optimization          │
-│ Immediate Response│               │  + Channels              │
-└──────────────────┘               └──────────┬───────────────┘
-                                              │ normalized
-                                              │ requests
-                                              ▼
-                                       ┌──────────────┐
-                                       │  AI Models   │
-                                       │ (LLM Runtime)│
-                                       └──────────────┘
+      Edge Node                                 Homelab
+┌────────────────────┐                 ┌───────────────────────┐
+│ Perception         │   structured    │ Stores + Kernel + RPU │
+│ Processing         │─────events─────▶│ + Orchestration       │
+│ Local Inference    │◀───requests─────│ + Optimization        │
+│ Immediate Response │                 │ + Channels            │
+└────────────────────┘                 └──────────┬────────────┘
+                                                  │ normalized
+                                                  │ requests
+                                                  ▼
+                                          ┌──────────────┐
+                                          │  AI Models   │
+                                          │ (LLM Runtime)│
+                                          └──────────────┘
 ```
 
 ---

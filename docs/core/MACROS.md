@@ -203,12 +203,12 @@ A hierarchical macro is a logical grouping of subgraph references, not a runtime
 
 ```
 Macro: morning_routine
-    ├── Macro: weather_check (child subgraph reference)
-    │       └── Tool: fetch_weather
-    ├── Macro: calendar_briefing (child subgraph reference)
-    │       └── Tool: fetch_calendar
-    └── Macro: news_summary (child subgraph reference)
-            └── Tool: fetch_news
+├── Macro: weather_check (child subgraph reference)
+│   └── Tool: fetch_weather
+├── Macro: calendar_briefing (child subgraph reference)
+│   └── Tool: fetch_calendar
+└── Macro: news_summary (child subgraph reference)
+    └── Tool: fetch_news
 ```
 
 At execution time, this is equivalent to a flat sequence of tool calls with conditional logic — the "macro calls" are just subgraph inlining. The hierarchy exists for:
