@@ -64,25 +64,25 @@ Phases 1–4 test the core thesis. Phases 5–6 are experimental extensions.
 
 | Document                                                       | Purpose                                             |
 | -------------------------------------------------------------- | --------------------------------------------------- |
-| [TECHNICAL_CONCEPT.md](docs/TECHNICAL_CONCEPT.md)            | Full architecture specification (Sections 1–18)     |
-| [GRAPH.md](docs/core/GRAPH.md)                               | World-state graph model (diagrams, heuristics)      |
-| [RPU.md](docs/core/RPU.md)                                   | Reasoning Processing Unit (flow diagrams, contract) |
-| [ORCHESTRATION.md](docs/core/ORCHESTRATION.md)               | Semantic orchestration primitives                   |
-| [MACROS.md](docs/core/MACROS.md)                             | Macro system (mining, validation, demotion)         |
-| [REGISTRY.md](docs/core/REGISTRY.md)                         | Code registry (transpilation, versioning)           |
-| [ENTITIES.md](docs/core/ENTITIES.md)                         | Entity model (schema, trust levels, permissions)    |
-| [CHANNELS.md](docs/core/CHANNELS.md)                         | Channel architecture (approval, control signals)    |
-| [RETRIEVAL.md](docs/core/RETRIEVAL.md)                       | Retrieval pipeline (filter chain, dual-access)      |
-| [EDGE_ARCHITECTURE.md](docs/core/EDGE_ARCHITECTURE.md)       | Portable Personal Edge Node                         |
-| [MULTIMODAL_INTERFACE.md](docs/core/MULTIMODAL_INTERFACE.md) | Multimodal cognitive interface                      |
-| [OFFLINE_OPTIMIZATION.md](docs/core/OFFLINE_OPTIMIZATION.md) | Background optimization loop                        |
-| [SECURITY.md](docs/core/SECURITY.md)                         | Security, privacy, and threat model                 |
-| [THREAT_MODEL.md](docs/core/THREAT_MODEL.md)                 | Attacker capability analysis (16 threat scenarios)  |
-| [EVALUATION.md](docs/core/EVALUATION.md)                     | Evaluation methodology and falsification criteria   |
-| [KNOWN_GAPS.md](docs/core/KNOWN_GAPS.md)                     | Open problems and future work                       |
-| [DESIGN_DECISIONS.md](docs/core/DESIGN_DECISIONS.md)         | Rationale behind key architectural choices          |
-| [ARCHITECTURE_DIAGRAMS.md](docs/core/ARCHITECTURE_DIAGRAMS.md) | All system flow diagrams                           |
-| [DOCUMENT_MAP.md](docs/DOCUMENT_MAP.md)                      | Document dependency graph and reading order         |
+| [TECHNICAL_CONCEPT.md](docs/TECHNICAL_CONCEPT.md)              | Full architecture specification (Sections 1–18)     |
+| [GRAPH.md](docs/core/GRAPH.md)                                 | World-state graph model (diagrams, heuristics)      |
+| [RPU.md](docs/core/RPU.md)                                     | Reasoning Processing Unit (flow diagrams, contract) |
+| [ORCHESTRATION.md](docs/core/ORCHESTRATION.md)                 | Semantic orchestration primitives                   |
+| [MACROS.md](docs/core/MACROS.md)                               | Macro system (mining, validation, demotion)         |
+| [REGISTRY.md](docs/core/REGISTRY.md)                           | Code registry (transpilation, versioning)           |
+| [ENTITIES.md](docs/core/ENTITIES.md)                           | Entity model (schema, trust levels, permissions)    |
+| [CHANNELS.md](docs/core/CHANNELS.md)                           | Channel architecture (approval, control signals)    |
+| [RETRIEVAL.md](docs/core/RETRIEVAL.md)                         | Retrieval pipeline (filter chain, dual-access)      |
+| [EDGE_ARCHITECTURE.md](docs/core/EDGE_ARCHITECTURE.md)         | Portable Personal Edge Node                         |
+| [MULTIMODAL_INTERFACE.md](docs/core/MULTIMODAL_INTERFACE.md)   | Multimodal cognitive interface                      |
+| [OFFLINE_OPTIMIZATION.md](docs/core/OFFLINE_OPTIMIZATION.md)   | Background optimization loop                        |
+| [SECURITY.md](docs/core/SECURITY.md)                           | Security, privacy, and threat model                 |
+| [THREAT_MODEL.md](docs/core/THREAT_MODEL.md)                   | Attacker capability analysis (16 threat scenarios)  |
+| [EVALUATION.md](docs/core/EVALUATION.md)                       | Evaluation methodology and falsification criteria   |
+| [KNOWN_GAPS.md](docs/core/KNOWN_GAPS.md)                       | Open problems and future work                       |
+| [DESIGN_DECISIONS.md](docs/core/DESIGN_DECISIONS.md)           | Rationale behind key architectural choices          |
+| [ARCHITECTURE_DIAGRAMS.md](docs/core/ARCHITECTURE_DIAGRAMS.md) | All system flow diagrams                            |
+| [DOCUMENT_MAP.md](docs/DOCUMENT_MAP.md)                        | Document dependency graph and reading order         |
 
 ### Recommended Reading Order
 
