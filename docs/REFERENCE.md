@@ -16,7 +16,7 @@ This document defines all terms used across the B.Y.T.E. architecture specificat
 
 **World-State Graph** — The unified conceptual model for runtime activity, operationally split into four logical graphs (perception, execution, memory, knowledge) stored in an append-only event store. State is derived by projecting event history.
 
-**Artifact Version Store** — Content-addressed, semantically versioned, lifecycle-managed storage for macros, skills, and code components. State is the latest version per artifact. Cross-store references use content hashes in events pointing to artifact ID+version — no unified index needed.
+**Artifact Version Store** — Content-addressed, semantically versioned, lifecycle-managed storage for macros, skills, code components, and entity definitions. State is the latest version per artifact. Cross-store references use content hashes in events pointing to artifact ID+version — no unified index needed.
 
 ### Runtime Components
 
@@ -104,7 +104,7 @@ This document defines all terms used across the B.Y.T.E. architecture specificat
 
 **Signal-to-Intent Pipeline** — The three-layer process that converts raw sensor streams into actionable intent: perception processing, situation model generation, and intent estimation.
 
-**Summarization Pipeline** — The downstream pipeline that converts situation model into narrative memories and validated knowledge. Makes the two-store, seven-graph model operationally viable by reducing volume while preserving signal.
+**Summarization Pipeline** — The downstream pipeline that converts situation model into narrative memories and validated knowledge. Makes the two-store, eight-graph model operationally viable by reducing volume while preserving signal.
 
 **Narrative Memory** — A consolidated experience indexed for long-term recall. A sequence of situation model compressed into a retrievable memory unit.
 
@@ -112,7 +112,17 @@ This document defines all terms used across the B.Y.T.E. architecture specificat
 
 ### Entity Model
 
-**Entity** — A lightweight graph node with identity, type, relationships, state (projection of history), and permissions (retrieval policy). Entities are not memory containers; all memory lives in the shared graph with metadata describing context.
+**Entity** — A participant in the system, composed of a versioned definition (stored in the Entity Graph) and projected state (derived from the event stream). Entities are not memory containers; all memory lives in the shared graph with metadata describing context.
+
+**Entity Graph** — The fourth artifact graph in the artifact version store. Stores versioned entity definitions (identity, trust level, permissions, relationships) as content-addressed, lifecycle-managed artifacts. Entity state is projected from events, not stored as an artifact.
+
+**Entity Definition** — A versioned artifact in the Entity Graph describing an entity's identity, trust level, permissions, and relationships. Changes through discrete actions (elevation, demotion, merge, permission update), each producing a new version. Distinct from entity state.
+
+**Entity State** — A projection over the world-state event stream describing an entity's derived state (last seen, interaction count, derived preferences, behavioral patterns). Computed on demand or cached; always derivable from history. Not stored as an artifact.
+
+**Known Entity** — An entity with an entry in the Entity Graph, regardless of trust level. Carries accumulated identity identifiers from multiple channels, relationship history, and associated knowledge/memories. Persists through demotion — the system retains understanding of who the entity is even without runtime access.
+
+**Unknown Entity** — A raw channel identifier with no Entity Graph entry. Detected but not yet promoted to an entity definition.
 
 **Internal Entity** — An operational projection of the runtime (Technical Assistant, Companion, Stream Host, Automation Agent). Defines retrieval policies over the shared graph. Does not require Admin elevation.
 
@@ -160,4 +170,4 @@ This document defines all terms used across the B.Y.T.E. architecture specificat
 
 **Identity Resolution** — The process of detecting that identifiers across different channels refer to the same entity. Presents merge suggestions to Admin or delegated users.
 
-**Identity Merge** — The operation of unifying multiple channel identifiers under a single entity. Logged as an event; Admin notified of all merges; reversible.
+**Identity Merge** — A DAG operation in the Entity Graph where two entity definitions produce a merged successor definition, preserving both as ancestors. The merged entity is a new version with two parents. Logged as an event; Admin notified of all merges; reversible. Unifies multiple channel identifiers under a single entity while preserving the provenance of each identity source.

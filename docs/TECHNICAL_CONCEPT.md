@@ -111,15 +111,22 @@ An **Entity** is any persistent thing that can participate in events. Examples i
 
 Entities are lightweight graph nodes with relationships and metadata, not containers for isolated memories. The runtime maintains a single immutable history and a unified knowledge graph from which multiple entity-specific projections are derived.
 
+**Entity definitions** (identity, trust level, permissions, relationships) are stored as versioned artifacts in the **Entity Graph** within the artifact version store. **Entity state** (last seen, interaction count, derived preferences) is a projection over the world-state event stream. The complete entity view combines both:
+
 ```
 Entity
-├── Identity
-├── Type (internal | external)
-├── Trust Level (admin | admin_delegate | trusted_user | sub_user | untrusted)
-├── Relationships
-├── State (projection of history)
-└── Permissions (retrieval policy)
+├── Definition (Entity Graph, artifact store)
+│   ├── Identity
+│   ├── Type (internal | external)
+│   ├── Trust Level (admin | admin_delegate | trusted_user | sub_user | untrusted)
+│   ├── Relationships
+│   └── Permissions (retrieval policy)
+└── State (projection from event stream)
+    ├── last_seen, interaction_count
+    └── derived preferences, behavioral patterns
 ```
+
+**Known vs. Unknown Entities.** An entity becomes "known" once it has an entry in the Entity Graph — regardless of trust level. A known entity carries accumulated identity identifiers (from multiple channels), relationship history, and associated knowledge/memories in the world-state graphs. If a known entity is demoted (e.g., from `trusted_user` back to `untrusted`), the entity definition remains in the Entity Graph with reduced permissions, but all accumulated identity, relationship context, and historical knowledge persists. The system retains understanding of who this entity is even without runtime access. An "unknown" entity is a raw channel identifier with no Entity Graph entry.
 
 **Internal entities** represent operational projections of the runtime (Technical Assistant, Companion, Stream Host, Automation Agent). They define retrieval policies over the shared graph — accessible domains, privacy levels, allowed channels, tool permissions, and sensor permissions. Internal entities do not require Admin elevation.
 
@@ -129,9 +136,9 @@ The Admin entity exists from system bootstrap, pre-linked to the primary webUI s
 
 → See [ENTITIES.md](./core/ENTITIES.md) for the full entity model specification.
 
-### 1.6 Implementation Note: Two Stores, Seven Graphs
+### 1.6 Implementation Note: Two Stores, Eight Graphs
 
-The seven logical graphs are split across two data stores, reflecting two fundamentally different data models.
+The eight logical graphs are split across two data stores, reflecting two fundamentally different data models.
 
 **World-State Event Store** — append-only, content-addressed events. State is derived by projecting event history. Four graphs share this store:
 
@@ -143,18 +150,19 @@ World-State Event Store (append-only, content-addressed)
 └── Knowledge projection   ── what is known
 ```
 
-**Artifact Version Store** — content-addressed, semantically versioned, lifecycle-managed. State is the latest version per artifact. Three graphs use this store:
+**Artifact Version Store** — content-addressed, semantically versioned, lifecycle-managed. State is the latest version per artifact. Four graphs use this store:
 
 ```
 Artifact Version Store (content-addressed, semantically versioned)
 ├── Macro Graph     ── compiled execution patterns
 ├── Skill Registry  ── pre-authored behavior definitions
-└── Code Registry   ── tested code components
+├── Code Registry   ── tested code components
+└── Entity Graph    ── identity & permissions definitions
 ```
 
 Each store maintains its own indexing strategy, retention policies, and query patterns. Cross-store references use content hashes in events pointing to artifact ID+version — no unified index is needed. An event in the world-state store references an artifact like `macro_used: macro_weather_check:v3.1.0`. An artifact in the version store references events for provenance like `provenance: { source_events: [evt_abc, evt_def, ...] }`.
 
-The separation reflects that world-state graphs are projections of lived experience (events), while artifact graphs are versioned entities the system creates, manages, and evolves over time.
+The separation reflects that world-state graphs are projections of lived experience (events), while artifact graphs are versioned entities the system creates, manages, and evolves over time. The Entity Graph stores entity definitions as versioned artifacts — identity, trust, permissions, and relationships — while entity state (derived from events involving that entity) remains a projection over the event stream. Known entity definitions persist even when demoted, preserving accumulated identity and relationship context.
 
 → See [GRAPH.md](./core/GRAPH.md#one-line-architecture-summary) for visual diagrams and design review heuristics.
 
@@ -263,7 +271,7 @@ The world-state graph is the single source of truth for the entire system. It is
 
 ### 4.1 Sub-Graph Architecture
 
-Conceptually the world-state is unified. Operationally the system uses seven logical graphs split across two data stores (Section 1.5). Each graph handles a different domain.
+Conceptually the world-state is unified. Operationally the system uses eight logical graphs split across two data stores (Section 1.6). Each graph handles a different domain.
 
 #### 4.1.1 World-State Graphs (Event Store)
 
@@ -286,6 +294,32 @@ These three graphs are versioned entities with semantic versioning and lifecycle
 **Skill Registry** — pre-authored behavior definitions in the existing harness format (instruction files + tool references). Content-addressed, versioned with semantic tags. Skills are not executed differently from other behavior — they generate execution traces that feed the compression pipeline. The Skill Registry answers "what behaviors are available as seeds." Skills come from any source; the user decides what to trust.
 
 **Code Registry Graph** — versioned, tested code components that the model and agents draw from when writing software with users. Not executed by the runtime; used to compose new programs. Components are actively authored by the model, agents, or the user. A mandatory test pipeline validates before adoption. Answers "what code exists, what version is current, and whether it passes tests."
+
+#### 4.1.3 Entity Graph (Version Store)
+
+The Entity Graph stores **entity definitions** — versioned, content-addressed artifacts describing identity, trust level, permissions, and relationships for every participant in the system. Entity definitions are distinct from entity state: the definition is a versioned artifact that changes through discrete actions; the state is a projection over the world-state event stream.
+
+**Entity definition schema:**
+
+```
+Entity Definition
+├── id: content-addressed hash
+├── type: internal | external
+├── internal_type: technical_assistant | companion | stream_host | automation_agent  // internal only
+├── trust_level: admin | admin_delegate | trusted_user | sub_user | untrusted
+├── identity:
+│   ├── primary: { channel_id, identifier }
+│   └── merged: [ { channel_id, identifier, merged_at, merged_by } ]
+├── relationships: [ { target_entity_id, relation_type, strength, since } ]
+├── permissions: { domain_access, privacy_ceiling, tool_permissions, sensor_permissions, ... }
+└── lifecycle_state: discovered | pending_review | active | suspended | merged | revoked
+```
+
+**Known vs. Unknown Entities.** An entity becomes "known" once it has an entry in the Entity Graph — regardless of trust level. A known entity carries accumulated identity identifiers from multiple channels, relationship history, and associated knowledge/memories in the world-state graphs. If a known entity is demoted (e.g., from `trusted_user` back to `untrusted`), the entity definition remains in the Entity Graph with reduced permissions, but all accumulated identity, relationship context, and historical knowledge persists. The system retains understanding of who this entity is even without runtime access. An "unknown" entity is a raw channel identifier with no Entity Graph entry — detected but not yet promoted to an entity definition.
+
+**Identity merging as a DAG operation.** Two entity definitions from different channels can be merged into a single successor definition, preserving both as ancestors in the DAG. The merged entity is a new version with two parents, fitting the artifact store's DAG model natively. This enables the system to unify "discord:@admin_user" and "voice_print_abc" into a single Admin entity while preserving the provenance of each identity source.
+
+**Cross-store references.** Events reference entity definitions by content hash (e.g., `entity_involved: entity_abc:v3`). Entity definitions reference events for provenance (e.g., `created_by: channel_approval_event_xyz`, `elevated_by: admin_action_event_123`). When an entity definition is updated, new events reference the new version while old events continue to reference the version that was current at the time.
 
 ### 4.2 Cross-References Between Sub-Graphs
 
@@ -332,7 +366,10 @@ Memory Graph → Knowledge Graph         (world-state event store)
 Execution Graph → Macro Graph          (artifact version store, via discovery pipeline)
 Skill Execution → Execution Graph → Macro Graph (artifact version store, skill-derived)
 Skill Execution → Execution Graph → Knowledge Graph (world-state event store, skill-derived)
+Event Stream → Entity State Projection (world-state event store, derived state per entity)
 ```
+
+Projections that write to the world-state event store produce events. Projections that write to the artifact version store produce artifact versions. The discovery pipeline (Section 9.1) reads from the world-state event store and writes to the artifact version store when proposing new macro versions. The entity state projection reads from the world-state event store and produces derived state for each known entity — this state is not stored as an artifact but is computed on demand or cached.
 
 Projections that write to the world-state event store produce events. Projections that write to the artifact version store produce artifact versions. The discovery pipeline (Section 9.1) reads from the world-state event store and writes to the artifact version store when proposing new macro versions.
 
@@ -398,6 +435,14 @@ The goal is not distributed consensus. The goal is tamper-evident history, causa
 ### 4.9 Entity Model and Memory Scoping
 
 An **Entity** is any persistent thing that can participate in events. Entities are lightweight graph nodes with identity, relationships, and permissions — not memory containers. All memory lives in the shared graph with metadata describing context.
+
+**Entity definitions** (identity, trust level, permissions, relationships) are stored as versioned artifacts in the **Entity Graph** within the artifact version store. **Entity state** (last seen, interaction count, derived preferences) is a projection over the world-state event stream. The complete entity view at runtime combines the definition from the Entity Graph with state projected from events, bound to a specific channel:
+
+```
+Entity Definition (Entity Graph) + Entity State (event projection) + Channel Binding = Runtime Entity Context
+```
+
+**Known vs. Unknown Entities.** An entity becomes "known" once it has an entry in the Entity Graph — regardless of trust level. A known entity carries accumulated identity identifiers (from multiple channels), relationship history, and associated knowledge/memories in the world-state graphs. If a known entity is demoted (e.g., from `trusted_user` back to `untrusted`), the entity definition remains in the Entity Graph with reduced permissions, but all accumulated identity, relationship context, and historical knowledge persists. The system retains understanding of who this entity is even without runtime access. An "unknown" entity is a raw channel identifier with no Entity Graph entry.
 
 **Internal entities** (Technical Assistant, Companion, Stream Host, Automation Agent) are operational projections of the runtime. They define retrieval policies over the shared graph: accessible domains, privacy levels, allowed channels, tool permissions, and sensor permissions. Internal entities do not own separate memory stores.
 
@@ -887,7 +932,7 @@ The memory graph indexes by semantic similarity, temporal proximity, emotional v
 
 The knowledge graph indexes by semantic topic, confidence score, validation status, source provenance, and contradiction history. This enables queries like "what facts are known about topic X and how confident are we."
 
-The summarization pipeline is what makes the two-store, seven-graph model operationally viable. Without it, queries across the full event log would be prohibitively expensive. With it, each graph operates on appropriately summarized data, and the memory and knowledge graphs emerge naturally from the pipeline at different compression levels.
+The summarization pipeline is what makes the two-store, eight-graph model operationally viable. Without it, queries across the full event log would be prohibitively expensive. With it, each graph operates on appropriately summarized data, and the memory and knowledge graphs emerge naturally from the pipeline at different compression levels.
 
 The pipeline runs continuously, with summarization depth adjustable based on compute availability. In dynamic repartition mode, the offline optimization loop can re-summarize historical situation model with improved algorithms, updating the memory and knowledge graphs without touching the immutable event log.
 

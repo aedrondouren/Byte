@@ -12,6 +12,8 @@ Skills (optional, pre-authored, versioned, executed via RPU)
     ↓
 Raw Signals → Perception Processing → Perception
     ↓
+Entity Discovery → Entity Graph (versioned definitions, artifact store)
+    ↓
 Situation Model Generation → Situation Model
     ↓
 Intent Estimation → Intent
@@ -37,6 +39,7 @@ Projection → Knowledge Graph ←──────────┘
 │ Macro Graph (skill-derived + pattern-derived)            │
 │ Skill Registry                                           │
 │ Code Registry                                            │
+│ Entity Graph (identity, trust, permissions, relationships)│
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -66,16 +69,144 @@ Projection → Knowledge Graph ←──────────┘
 │ Macro Graph     ── compiled patterns    │
 │ Skill Registry  ── authored behaviors   │
 │ Code Registry   ── tested components    │
+│ Entity Graph    ── identity & perms     │
 │                                         │
 │ Queries: identity, version, capability  │
 │ Retention: reference-based, no archival │
 └─────────────────────────────────────────┘
 ```
 
+## Entity Graph Position
+
+```
+World-State Event Store  ◄──►  Artifact Version Store
+    │                               │
+    │    ┌─ Perception Graph        │    ┌─ Macro Graph
+    │    ├─ Execution Graph         │    ├─ Skill Registry
+    │    ├─ Memory Graph            │    ├─ Code Registry
+    │    └─ Knowledge Graph         │    └─ Entity Graph  ← identity, trust, permissions
+    │                               │
+    └───────────┬───────────────────┘
+                │
+        Cognitive Kernel
+```
+
+## Entity Definition Lifecycle (DAG)
+
+```
+Unknown Identifier (raw channel ID, no Entity Graph entry)
+    ↓
+[Entity Def v1: discovered from channel_A]          [Entity Def v1: discovered from channel_B]
+  type: external                                      type: external
+  trust: untrusted                                    trust: untrusted
+  identity: {discord:@bob}                            identity: {voice_print_xyz}
+                            \                        /
+                             \                      /
+                    [Entity Def v2: merged identity]
+                    ├── identity: { primary: discord:@bob, merged: [voice_print_xyz] }
+                    ├── trust: untrusted
+                    └── provenance: { merged_from: [v1_A, v1_B] }
+                              |
+                    [Entity Def v3: permissions elevated]
+                    ├── trust: trusted_user
+                    ├── permissions: { domain_access: { technical: read } }
+                    └── provenance: { elevated_by: admin, from_version: v2 }
+                              |
+                    [Entity Def v4: relationships updated]
+                    ├── trust: trusted_user
+                    ├── relationships: [ { target: entity_admin, type: collaborates_with } ]
+                    └── provenance: { updated_by: system, from_version: v3 }
+                              |
+                    [Entity Def v5: demoted]
+                    ├── trust: untrusted
+                    ├── permissions: { none }
+                    ├── identity: { preserved }           ← system still knows who this is
+                    ├── relationships: [ preserved ]      ← relationship history persists
+                    └── provenance: { demoted_by: admin, from_version: v4 }
+```
+
+## Entity/Session Composition (Runtime)
+
+```
+┌─────────────────────────────┐
+│  Entity Graph               │
+│  (Artifact Version Store)   │
+│                             │
+│  Entity Def: entity_abc:v3  │
+│  ├── trust: trusted_user    │
+│  ├── identity: {...}        │
+│  ├── permissions: {...}     │
+│  └── relationships: [...]   │
+└──────────┬──────────────────┘
+           │ loaded by hash
+           ▼
+┌─────────────────────────────┐     ┌─────────────────────────────┐
+│  World-State Event Store    │     │  Channel Definition         │
+│                             │     │                             │
+│  Events where entity was    │     │  entity_bindings:           │
+│  subject/participant        │     │  - entity_def: entity_abc   │
+│                             │     │    session_id: discord:@bob │
+│  Projected State:           │     │    role: trusted_user       │
+│  - last_seen                │     └──────────┬──────────────────┘
+│  - interaction_count        │                │
+│  - derived_preferences      │                │
+└──────────┬──────────────────┘                │
+           │ projected                         │
+           ▼                                   ▼
+┌─────────────────────────────────────────────────────────────┐
+│              Complete Entity/Session Context                │
+│                                                             │
+│  entity: entity_abc:v3                                      │
+│  state: { last_seen: ..., interaction_count: 147, ... }     │
+│  session: { channel: "discord", session_id: "@bob", ... }   │
+│  effective_permissions: { entity_perms ∩ channel_perms }    │
+└─────────────────────────────────────────────────────────────┘
+           │
+           ▼
+    ContextProjection → RPU / Execution
+```
+
+## Entity Demotion Preserves Knowledge
+
+```
+Before Demotion:                              After Demotion:
+┌──────────────────────────┐                  ┌──────────────────────────┐
+│ Entity Def v3            │                  │ Entity Def v4 (demoted)  │
+│ trust: trusted_user      │                  │ trust: untrusted         │
+│ permissions: { read }    │     ──demote──▶  │ permissions: { none }    │
+│ identity: { discord:@bob │                  │ identity: { discord:@bob │
+│           voice_print }  │                  │           voice_print }  │
+└──────────┬───────────────┘                  └──────────┬───────────────┘
+           │                                            │
+           ▼                                            ▼
+┌──────────────────────────┐                  ┌──────────────────────────┐
+│ Entity State (projected) │                  │ Entity State (projected) │
+│ last_seen: ...           │     unchanged    │ last_seen: ...           │
+│ interactions: 147        │     ◀─────────▶  │ interactions: 147        │
+│ preferences: {...}       │                  │ preferences: {...}       │
+└──────────┬───────────────┘                  └──────────┬───────────────┘
+           │                                            │
+           ▼                                            ▼
+┌──────────────────────────┐                  ┌──────────────────────────┐
+│ World-State Graphs       │                  │ World-State Graphs       │
+│ Memories: 47 entries     │     unchanged    │ Memories: 47 entries     │
+│ Knowledge: 12 entries    │     ◀─────────▶  │ Knowledge: 12 entries    │
+│ Relationships: 5         │                  │ Relationships: 5         │
+└──────────────────────────┘                  └──────────────────────────┘
+
+Result: System knows WHO this entity is, but grants NO runtime access.
+        If re-elevated, all context is immediately available.
+```
+
 ## Unified System Model
 
 ```
 World-State Event Store  ◄──►  Artifact Version Store
+    │                               │
+    │    ┌─ Perception Graph        │    ┌─ Macro Graph
+    │    ├─ Execution Graph         │    ├─ Skill Registry
+    │    ├─ Memory Graph            │    ├─ Code Registry
+    │    └─ Knowledge Graph         │    └─ Entity Graph
     │                               │
     └───────────┬───────────────────┘
                 │

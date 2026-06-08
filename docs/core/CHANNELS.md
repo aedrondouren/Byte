@@ -99,7 +99,7 @@ Channel
 ├── status: pending_approval | active | suspended | revoked
 ├── approved_by: entity_id
 ├── approved_at: timestamp
-├── entity_bindings: [ { entity_id, session_id, role } ]        // fixed channels
+├── entity_bindings: [ { entity_def_hash, session_id, role } ]        // fixed channels, references Entity Graph
 ├── entity_resolution: { method, fallback: untrusted_entity }   // dynamic channels
 ├── produces: [event_type, ...]
 ├── consumes: [event_type, ...]
@@ -113,13 +113,15 @@ Channel
 └── metadata: { capabilities, trust_vector, ... }
 ```
 
+**Entity binding references.** The `entity_bindings` field references entity definitions by content hash from the Entity Graph. When a channel binds to an entity, it binds to a specific version of the entity definition. At runtime, the binding resolves to the latest version of that entity definition. If the entity definition is updated (e.g., permissions changed, identity merged), the channel binding automatically resolves to the new version — the channel does not need to be reconfigured.
+
 ---
 
 ## Entity Binding
 
 ### Fixed Channels
 
-Fixed channels are bound to specific entities and sessions at configuration time.
+Fixed channels are bound to specific entities and sessions at configuration time. The `entity_bindings` field references entity definitions by content hash from the Entity Graph.
 
 Example: a Discord DM channel bound to a specific user.
 
@@ -127,15 +129,17 @@ Example: a Discord DM channel bound to a specific user.
 Channel: discord_dm_admin
 ├── surface: "discord"
 ├── entity_bindings: [
-│   { entity_id: "entity_abc", session_id: "discord:@admin_user", role: "admin" }
+│   { entity_def_hash: "entity_abc:v3", session_id: "discord:@admin_user", role: "admin" }
 │ ]
 ├── produces: [user_message, channel_reaction]
 └── consumes: [world_state_projection]
 ```
 
+The channel binds to `entity_abc` and resolves to the latest version of that entity definition at runtime. If the entity definition is updated (e.g., identity merged, permissions changed), the channel binding automatically resolves to the new version.
+
 ### Dynamic Channels
 
-Dynamic channels resolve entity identity at event time, using voice prints, face recognition, manual ID tokens, or contextual inference.
+Dynamic channels resolve entity identity at event time, using voice prints, face recognition, manual ID tokens, or contextual inference. When an unknown identifier is resolved to a new entity, a new entity definition artifact is created in the Entity Graph.
 
 Example: a speech-to-text channel that identifies speakers dynamically.
 
@@ -150,7 +154,7 @@ Channel: voice_stt_living_room
 └── consumes: [world_state_projection]
 ```
 
-When identification fails, the event is attributed to the fallback entity (typically untrusted).
+When identification succeeds, the resolved entity definition is loaded from the Entity Graph. When identification fails, the event is attributed to the fallback entity (typically untrusted). When an unknown identifier is discovered (no matching entity definition exists), a new entity definition is created in the Entity Graph with `lifecycle_state: discovered` and `trust_level: untrusted`.
 
 ---
 
@@ -160,14 +164,14 @@ Channels are **not control channels by default**, even for Admin-connected chann
 
 ```
 Channel: webui_admin_primary
-├── entity: admin
-├── control_channel: true        // explicitly enabled
+├── entity_def_hash: admin:v1            // explicitly enabled
+├── control_channel: true
 ├── control_signals: [all]
 └── ...
 
 Channel: webui_admin_secondary
-├── entity: admin
-├── control_channel: false       // Admin identity but no control through this channel
+├── entity_def_hash: admin:v1            // Admin identity but no control through this channel
+├── control_channel: false
 └── ...
 ```
 

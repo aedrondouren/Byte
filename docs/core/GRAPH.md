@@ -41,7 +41,7 @@ Perception Graph
     ↓
 Entity Discovery
     ↓
-Entities (graph nodes)
+Entity Graph (versioned definitions, artifact store)
     ↓
 Situation Model Generation
     ↓
@@ -61,7 +61,7 @@ Knowledge Generalization (with preserved provenance, dual-access)
     ↓
 Knowledge Graph
     ↓
-Retrieval Pipeline (entity ∩ channel ∩ domain ∩ privacy ∩ relevance)
+Retrieval Pipeline (entity definition ∩ channel ∩ domain ∩ privacy ∩ relevance)
     ↓
 ContextProjection → RPU / Execution
 
@@ -76,9 +76,9 @@ Knowledge Graph (skill-derived, with provenance)
 
 Each arrow is a projection — a pure function over an event stream. Skill-derived projections carry provenance metadata linking derived artifacts to their source skill and version.
 
-### Seven logical graphs, two stores
+### Eight logical graphs, two stores
 
-The seven graphs are split across two data stores reflecting two fundamentally different data models.
+The eight graphs are split across two data stores reflecting two fundamentally different data models.
 
 **World-State Event Store** — append-only, content-addressed events. State is derived by projecting event history.
 
@@ -95,9 +95,42 @@ Knowledge Graph   ── what is known       (event store)
 Macro Graph       ── compiled patterns   (artifact store)
 Code Registry     ── tested components   (artifact store)
 Skill Registry    ── authored behaviors  (artifact store)
+Entity Graph      ── identity & permissions (artifact store)
 ```
 
 Cross-store references use content hashes in events pointing to artifact ID+version. No unified index is needed.
+
+### Entity Graph
+
+The Entity Graph is the fourth artifact graph in the artifact version store. It stores **entity definitions** — versioned, content-addressed artifacts describing identity, trust level, permissions, and relationships for every participant in the system.
+
+Entity definitions are distinct from entity state. An entity definition is a versioned artifact that changes through discrete actions (admin elevation, identity merge, permission changes). Entity state is a projection over the world-state event stream (last seen, interaction count, derived preferences) and is not stored as an artifact.
+
+```text
+Entity Definition (Artifact Store)          Entity State (Projection)
+├── id, type, trust_level                   ├── last_seen: timestamp
+├── identity: { primary, merged[] }         ├── interaction_count: number
+├── relationships, permissions              ├── derived_preferences: [...]
+└── lifecycle_state: discovered | ...       └── ...  // all derived from events
+```
+
+See [ENTITIES.md](ENTITIES.md#entity-schema) for the full entity definition schema.
+
+The complete entity view at runtime combines the definition from the Entity Graph with state projected from events and the channel binding. See [ENTITIES.md](ENTITIES.md#entitysession-composition) for the full composition model.
+
+Entity definitions support identity merging as a DAG operation: two entity definitions from different channels can be merged into a single successor definition, preserving both as ancestors. This fits the artifact store's DAG model natively — the merged entity is a new version with two parents.
+
+**Known vs. Unknown Entities.** An entity becomes "known" once it has an entry in the Entity Graph — regardless of trust level. A known entity carries accumulated identity identifiers (from multiple channels), relationship history, and associated knowledge/memories in the world-state graphs. If a known entity is demoted (e.g., from `trusted_user` back to `untrusted`), the entity definition remains in the Entity Graph with reduced permissions, but all accumulated identity, relationship context, and historical knowledge persists. The system retains understanding of who this entity is even without runtime access. An "unknown" entity is one with no Entity Graph entry — a raw channel identifier that has not yet been promoted to an entity definition.
+
+Entity definition lifecycle states: `discovered` → `pending_review` → `active` → `suspended` → `merged` → `revoked`. State transitions are recorded as events in the execution graph.
+
+**Indexing strategy (Entity Graph):**
+
+- **Entity ID index** — hash table by content hash. O(1) lookup.
+- **Identity index** — reverse lookup from channel+identifier to entity definition. O(1) hash lookup.
+- **Trust level index** — sorted by trust level for permission filtering. O(log n).
+- **Lifecycle state index** — sorted by lifecycle state for admin review queues. O(log n).
+- **Relationship index** — hash table by entity_id for relationship traversal. O(1).
 
 ### Channels are bidirectional boundaries
 
@@ -148,8 +181,6 @@ Control signal authority requires explicit enablement (default: disabled).
 Trust flows: Admin approves channels -> channels bind to entities ->
 entities have permissions -> permissions filter retrieval.
 
-````
-
 ### The graph is a DAG
 
 ```text
@@ -158,7 +189,7 @@ entities have permissions -> permissions filter retrieval.
     B   C
      \ /
       D
-````
+```
 
 Multiple chains execute concurrently. Reasoning can fork. Execution paths can merge. Lineage is preserved.
 
@@ -264,6 +295,11 @@ No unified index is needed. Each store maintains its own indexing.
 | "Current version of artifact A"                    | O(1)             | Artifact index                     | Latest version lookup                                                     |
 | "All versions of artifact A"                       | O(k)             | Version index                      | k = version count                                                         |
 | "Artifacts referencing event E"                    | O(log n)         | Reverse reference index            | k = referencing artifacts                                                 |
+| "Entity definition by ID"                          | O(1)             | Entity ID hash table               | Content-addressed lookup                                                  |
+| "Entity by channel identifier"                     | O(1)             | Identity reverse index             | channel_id + identifier → entity definition                               |
+| "All entities at trust level X"                    | O(log n + k)     | Trust level index                  | k = matching entities                                                     |
+| "Known entities pending review"                    | O(log n + k)     | Lifecycle state index              | k = pending entities                                                      |
+| "Relationships for entity E"                       | O(1 + k)         | Relationship index                 | k = relationships                                                         |
 
 **Indexing strategy performance:**
 
@@ -279,10 +315,13 @@ _Artifact Version Store:_
 - **Macro graph:** Pattern index (hash table by normalized signature) + usage index (sorted by last-used time) + provenance index (hash table by source skill ID and version) + version index (sorted by semantic version). Query cost: O(1) for pattern lookup, O(log n) for usage queries, O(1) for provenance lookup, O(1) for version lookup.
 - **Skill registry:** Capability index (hash table by skill name/ID) + version index (sorted by semantic version) + tool access index (hash table by tool name). Query cost: O(1) for skill lookup, O(log n) for version queries, O(1) for tool access queries.
 - **Code registry:** Capability index (hash table by component capability) + version index (sorted by semantic version) + dependency index (hash table by dependency). Query cost: O(1) for capability lookup, O(log n) for version queries, O(1) for dependency queries.
+- **Entity graph:** Entity ID index (hash table by content hash) + identity reverse index (channel+identifier → entity) + trust level index (sorted) + lifecycle state index (sorted) + relationship index (hash table by entity_id). Query cost: O(1) for entity lookup, O(1) for identity resolution, O(log n) for trust-level queries, O(log n) for lifecycle queries, O(1) for relationship traversal.
 
 **Retention policy impact on query cost.** Events outside the retention window are archived to cold storage. Queries that span hot and cold storage incur additional latency for cold storage retrieval. The summarization pipeline ensures that frequently-queried data (knowledge, recent memories) remains in hot storage, while raw perception events are archived after the retention period.
 
-Artifacts in the version store are never archived to cold storage as long as any reference points to them. An artifact version remains accessible until all references to it are removed (macro demoted, skill uninstalled, code component deprecated with no dependents). This differs from event retention: artifacts are kept by reference, not by time window.
+Artifacts in the version store are never archived to cold storage as long as any reference points to them. An artifact version remains accessible until all references to it are removed (macro demoted, skill uninstalled, code component deprecated with no dependents, entity definition revoked with no remaining event references). This differs from event retention: artifacts are kept by reference, not by time window.
+
+**Entity definition retention.** Known entity definitions persist indefinitely even when demoted to `untrusted` or `revoked`. This preserves accumulated identity, relationship context, and historical knowledge — the system retains understanding of who an entity is even without runtime access. Revoked entity definitions are only eligible for archival when all events referencing them are themselves archived to cold storage, and no active channel bindings or relationship references remain.
 
 ### Design Review Heuristics
 

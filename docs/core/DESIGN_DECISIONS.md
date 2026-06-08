@@ -34,13 +34,13 @@ This document explains why the architecture makes the choices it does. Each deci
 
 ---
 
-## Why Two Stores, Seven Graphs
+## Why Two Stores, Eight Graphs
 
-**Decision:** The world-state graphs (perception, execution, memory, knowledge) share an append-only event store. The artifact graphs (macro, skill, registry) use a separate versioned artifact store. Cross-store references use content hashes in events pointing to artifact ID+version — no unified index needed.
+**Decision:** The world-state graphs (perception, execution, memory, knowledge) share an append-only event store. The artifact graphs (macro, skill, registry, entity) use a separate versioned artifact store. Cross-store references use content hashes in events pointing to artifact ID+version — no unified index needed.
 
 **Alternatives considered:**
 
-- Single event store for all seven graphs (original design)
+- Single event store for all eight graphs (original design)
 - Separate stores for each graph
 - Unified index mapping both stores
 
@@ -54,26 +54,26 @@ This document explains why the architecture makes the choices it does. Each deci
 
 **Trade-off:** Cross-store references require two lookups instead of one. However, this is O(1) + O(1) with proper indexing — the event stores the artifact ID+version, and the artifact store lookup is a direct hash. The cost is negligible compared to the clarity gained by separating the models.
 
-**Where the original design broke down:** The "everything is an event" model was a useful simplification during early design but doesn't hold under scrutiny. A macro v2 is not an "event" — it's a new version of an artifact. The event that _created_ macro v2 is in the world-state store; the macro artifact itself is not. Similarly, a skill definition is not an event — it's a versioned entity that generates events when executed.
+**Where the original design broke down:** The "everything is an event" model was a useful simplification during early design but doesn't hold under scrutiny. A macro v2 is not an "event" — it's a new version of an artifact. The event that _created_ macro v2 is in the world-state store; the macro artifact itself is not. Similarly, a skill definition is not an event — it's a versioned entity that generates events when executed. An entity definition is not an event — it's a versioned artifact that changes through discrete actions (elevation, merge, permission update).
 
 ---
 
-## Why Seven Graphs vs. One Graph with Tags
+## Why Eight Graphs vs. One Graph with Tags
 
-**Decision:** The world-state is conceptually split into four logical graphs (perception, execution, memory, knowledge) within the event store, and three logical graphs (macro, skill, registry) within the artifact store.
+**Decision:** The world-state is conceptually split into four logical graphs (perception, execution, memory, knowledge) within the event store, and four logical graphs (macro, skill, registry, entity) within the artifact store.
 
 **Alternatives considered:**
 
 - One graph with type tags on all events
-- Seven separate physical databases
+- Eight separate physical databases
 - One graph with separate indexes per domain
 
 **Reasoning:**
 
-- **Conceptual separation keeps queries simple and indexing efficient.** A query for "all memories relevant to the current situation" should not scan perception events. A query for "current version of macro X" should not scan the event log.
+- **Conceptual separation keeps queries simple and indexing efficient.** A query for "all memories relevant to the current situation" should not scan perception events. A query for "current version of macro X" should not scan the event log. A query for "entity permissions for entity_abc" should not scan the event log.
 - **Physical separation by data model** ensures that each store uses the indexing strategy appropriate to its data type — temporal/causal for events, identity/version for artifacts.
-- **Each graph maintains its own indexing strategy and retention policies.** Perception events may be retained for days; knowledge entries may be retained indefinitely; artifact versions are retained as long as referenced.
-- **The "two stores, seven graphs" model** provides the best balance of conceptual clarity and implementation simplicity.
+- **Each graph maintains its own indexing strategy and retention policies.** Perception events may be retained for days; knowledge entries may be retained indefinitely; artifact versions are retained as long as referenced; entity definitions persist even when demoted.
+- **The "two stores, eight graphs" model** provides the best balance of conceptual clarity and implementation simplicity.
 
 ---
 
@@ -374,6 +374,27 @@ Several gaps are acknowledged but not resolved (KNOWN_GAPS.md). The deferral rat
 **Trade-off:** Storage growth. The immutable history grows indefinitely. The summarization pipeline and retention policies address this by archiving old events to cold storage while keeping summaries in hot storage.
 
 ---
+
+## Why Entity Definitions in the Artifact Store
+
+**Decision:** Entity definitions (identity, trust level, permissions, relationships) are stored as versioned artifacts in the Entity Graph within the artifact version store. Entity state (last seen, interaction count, derived preferences) is a projection over the world-state event stream.
+
+**Alternatives considered:**
+
+- Entities fully derived from events on every access (pure projection model)
+- Entities in a separate mutable database (traditional CRUD model)
+- Entities as special events in the world-state store (single-store model)
+
+**Reasoning:**
+
+- **Entity definitions change through discrete actions.** Admin elevation, identity merge, permission changes, and relationship updates are discrete, auditable actions — not continuous event projections. This is a versioning problem, not an event projection problem. The artifact store's versioned entity model fits naturally.
+- **The artifact store already handles this pattern.** Macros, skills, and code components are all versioned, content-addressed, lifecycle-managed artifacts. Entity definitions share the same characteristics: they have versions, lifecycle states, provenance, and cross-references. Adding entities to the artifact store is consistent, not exceptional.
+- **Identity merging is a DAG operation.** Two entity definitions from different channels are merged into a single successor definition, preserving both as ancestors. The artifact store's DAG model handles this natively — the merged entity is a new version with two parents. An event store would require a separate merge mechanism.
+- **Efficient lookup is a practical necessity.** Entity definitions are queried on every retrieval request, every channel binding, and every permission check. Re-deriving identity, trust, and permissions from the full event stream on every access would be prohibitively expensive. The artifact store provides O(1) definition lookup by content hash.
+- **Known entities persist through demotion.** When a known entity is demoted, the entity definition remains in the Entity Graph with reduced permissions, but all accumulated identity, relationship context, and historical knowledge persists. The system retains understanding of who this entity is even without runtime access. A pure projection model would lose this context if events were archived.
+- **Separation of definition and state maintains invariants.** The "state as projection" invariant is preserved for derived state (last seen, interaction count, preferences). The definition (who this entity is, what they're allowed to do) is a versioned artifact. This separation is clean and consistent with the rest of the architecture.
+
+**Trade-off:** Cross-store references between entity definitions and events. This is the same pattern used by macros and skills — events reference entity definitions by content hash, entity definitions reference events for provenance. The cost is negligible compared to the clarity gained by separating definition from state.
 
 ---
 

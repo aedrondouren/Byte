@@ -34,7 +34,7 @@ Candidate Memory
 
 ```
 Retrieval Request
-├── requesting_entity: entity_id
+├── requesting_entity: entity_id          // shorthand; resolves to latest entity_def_hash from Entity Graph
 ├── via_channel: channel_id
 ├── task_context:
 │   ├── domains: [domain, ...]
@@ -50,14 +50,17 @@ Retrieval Request
 
 ### Step 1: Entity Trust Check
 
-Load the requesting entity's trust level and permissions.
+Load the requesting entity's definition from the Entity Graph (artifact version store) by content hash. The entity definition provides the current trust level and permissions — these are not derived from events but are loaded directly from the versioned artifact.
 
 ```
-If entity.trust_level == untrusted:
+Load entity definition from Entity Graph by entity_def_hash
+If entity_definition.trust_level == untrusted:
+    -> return empty context (no access)
+If entity_definition.lifecycle_state == revoked:
     -> return empty context (no access)
 ```
 
-Untrusted entities receive no memory or knowledge context. They may still interact with the system (producing events), but they receive no contextual information in return.
+Untrusted entities receive no memory or knowledge context. They may still interact with the system (producing events), but they receive no contextual information in return. Known entities that have been demoted to untrusted retain their accumulated identity and relationship history in the Entity Graph and world-state graphs, but receive no runtime access.
 
 ### Step 2: Channel Policy
 
@@ -143,16 +146,18 @@ Truncate to max_results
 ContextProjection
 ├── memories: [MemoryEvent, ...]
 ├── knowledge: [KnowledgeEntry, ...]
-├── entities: [Entity, ...]
+├── entities: [EntityDefinition, ...]          // loaded from Entity Graph
+├── entity_states: [EntityState, ...]          // projected from event stream
 ├── channel: ChannelPolicy
-├── active_entity: Entity
+├── active_entity: EntityDefinition            // current version from Entity Graph
+├── active_entity_state: EntityState           // projected state for active entity
 └── permission_summary:
     ├── accessible_domains: [domain, ...]
     ├── privacy_ceiling: privacy_level
     └── control_authority: boolean
 ```
 
-This ContextProjection becomes the `context` field in the RPU request.
+This ContextProjection becomes the `context` field in the RPU request. Entity definitions are loaded from the Entity Graph; entity states are projected from the event stream.
 
 ---
 
@@ -174,9 +179,11 @@ interface RPURequest {
 interface ContextProjection {
   memories: MemoryEvent[];
   knowledge: KnowledgeEntry[];
-  entities: Entity[];
+  entities: EntityDefinition[]; // loaded from Entity Graph
+  entityStates: EntityState[]; // projected from event stream
   channel: ChannelPolicy;
-  activeEntity: Entity;
+  activeEntity: EntityDefinition; // current version from Entity Graph
+  activeEntityState: EntityState; // projected state
   permissionSummary: {
     accessibleDomains: string[];
     privacyCeiling: string;
@@ -234,7 +241,9 @@ When entity permissions change, derived artifacts are affected:
 ### Knowledge Invalidation
 
 ```
-Entity demoted or permissions reduced:
+Entity definition updated (demoted or permissions reduced):
+    ↓
+New entity definition version created in Entity Graph
     ↓
 Identify all knowledge entries where learned_from == demoted_entity
     ↓
@@ -247,10 +256,14 @@ If new entity (with different permissions) produces same factual patterns:
     -> old entries decay naturally
 ```
 
+**Entity definition versioning.** When an entity definition is updated, a new version is created in the Entity Graph. Events created after the update reference the new version; events created before continue to reference the old version. This preserves the provenance chain — it is always clear which entity definition version was active when a knowledge entry was created.
+
 ### Macro Invalidation
 
 ```
-Entity demoted or permissions reduced:
+Entity definition updated (demoted or permissions reduced):
+    ↓
+New entity definition version created in Entity Graph
     ↓
 Identify all macros derived from demoted_entity's execution
     ↓
