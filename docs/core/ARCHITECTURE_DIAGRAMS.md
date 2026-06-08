@@ -2,7 +2,7 @@
 
 > Expands on the Architecture Flow Diagrams section of [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md#18-architecture-flow-diagrams).
 > **Audience:** Technical
-> **Prerequisites:** TECHNICAL_CONCEPT.md Sections 1–11
+> **Prerequisites:** TECHNICAL_CONCEPT.md Sections 1–18
 > **Status:** Complete
 
 ## Full Transformation Flow

@@ -64,7 +64,7 @@ Phases 1–4 test the core thesis. Phases 5–6 are experimental extensions.
 
 | Document                                                     | Purpose                                             |
 | ------------------------------------------------------------ | --------------------------------------------------- |
-| [TECHNICAL_CONCEPT.md](docs/TECHNICAL_CONCEPT.md)            | Full architecture specification (Sections 1–11)     |
+| [TECHNICAL_CONCEPT.md](docs/TECHNICAL_CONCEPT.md)            | Full architecture specification (Sections 1–18)     |
 | [GRAPH.md](docs/core/GRAPH.md)                               | World-state graph model (diagrams, heuristics)      |
 | [RPU.md](docs/core/RPU.md)                                   | Reasoning Processing Unit (flow diagrams, contract) |
 | [ORCHESTRATION.md](docs/core/ORCHESTRATION.md)               | Semantic orchestration primitives                   |

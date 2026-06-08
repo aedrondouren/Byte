@@ -99,7 +99,7 @@ In plain terms: Can a system get better by _organizing what it has learned_ rath
 | ------------------------------------------------------ | --------- | ------------------------------------------------ |
 | [CONCEPTUAL_OVERVIEW.md](docs/CONCEPTUAL_OVERVIEW.md)  | Everyone  | Plain-language explanation of the system         |
 | [README.md](README.md)                                 | Everyone  | Project abstract, thesis, and navigation         |
-| [docs/TECHNICAL_CONCEPT.md](docs/TECHNICAL_CONCEPT.md) | Technical | Full architecture specification (Sections 1–11)  |
+| [docs/TECHNICAL_CONCEPT.md](docs/TECHNICAL_CONCEPT.md) | Technical | Full architecture specification (Sections 1–18)  |
 | [docs/REFERENCE.md](docs/REFERENCE.md)                 | Everyone  | Glossary of all terms used in the documentation  |
 | [docs/core/](docs/core/)                               | Technical | Detailed specifications of individual subsystems |
 

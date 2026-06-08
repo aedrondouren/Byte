@@ -164,7 +164,7 @@ This project is in the **design phase**. Nothing has been implemented yet. Here 
 | **1** | Core kernel and execution system         | Design complete                        |
 | **2** | AI reasoning coprocessor + orchestration | Design complete                        |
 | **3** | Sensor-to-action pipeline                | Design complete                        |
-| **4** | Memory, knowledge, and skill registry    | Design complete — harness complete     |
+| **4** | Memory, knowledge, and skill registry    | Design complete                        |
 | **5** | Macros + code registry                   | Research phase — optimization layer    |
 | **6** | Wearable edge device + multimodal input  | Conceptual — hardware not yet designed |
 

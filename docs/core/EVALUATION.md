@@ -23,12 +23,12 @@ The baseline is established in Phase 2 (RPU + Orchestration): reasoning cost for
 
 ## Measurement Points
 
-| Phase   | What Is Added                              | Expected Effect                                                                                                                                                                                                            |
-| ------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Phase 2 | Planning-first, structured contracts       | Minimal reduction: plan reuse avoids re-derivation                                                                                                                                                                         |
-| Phase 3 | Signal-to-intent pipeline                  | Moderate reduction: structured context replaces ad-hoc prompting                                                                                                                                                           |
-| Phase 4 | Memory + Knowledge graphs + Skill Registry | **Significant reduction**: validated facts eliminate re-derivation, narrative memories replace raw context. Skills provide structured behavior from day one (harness complete, but skills are not part of the thesis test) |
-| Phase 5 | Macros (pattern-derived + skill-derived)   | Additional reduction: compiled execution patterns replace reasoning entirely for repeated tasks; skill-derived macros provide faster path for skill-covered domains                                                        |
+| Phase   | What Is Added                              | Expected Effect                                                                                                                                                                           |
+| ------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 2 | Planning-first, structured contracts       | Minimal reduction: plan reuse avoids re-derivation                                                                                                                                        |
+| Phase 3 | Signal-to-intent pipeline                  | Moderate reduction: structured context replaces ad-hoc prompting                                                                                                                          |
+| Phase 4 | Memory + Knowledge graphs + Skill Registry | **Significant reduction**: validated facts eliminate re-derivation, narrative memories replace raw context. Skills provide structured behavior from day one (not part of the thesis test) |
+| Phase 5 | Macros (pattern-derived + skill-derived)   | Additional reduction: compiled execution patterns replace reasoning entirely for repeated tasks; skill-derived macros provide faster path for skill-covered domains                       |
 
 Skills are available from Phase 4 and execute through the RPU with full reasoning. They make the harness functionally complete but do not affect the thesis measurement. The falsification criterion compares Phase 4 (memory + knowledge) against the Phase 2 baseline — skills are a constant across both and therefore cancel out.
 
@@ -81,15 +81,18 @@ Findings will be released publicly. Outside evaluations with different providers
 
 To isolate the contribution of each subsystem, the following ablation studies will be conducted:
 
-| Ablation                    | What Is Removed                                             | What Is Measured                                                                |
-| --------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| **No skills**               | All skills uninstalled; system starts cold                  | Baseline reasoning cost without any seed behaviors; measures cold-start penalty |
-| **No knowledge graph**      | Knowledge validation pipeline disabled                      | Impact of validated facts vs. raw memory alone                                  |
-| **No memory graph**         | Narrative memory and retrieval disabled                     | Impact of experience recall vs. no recall                                       |
-| **No macros**               | Macro discovery and compilation disabled                    | Impact of execution compression vs. raw execution                               |
-| **No skill-derived macros** | Skills execute via RPU only; no compression of skill traces | Impact of skill-to-macro transformation vs. skill-only baseline                 |
-| **No temporal intent**      | Temporal pattern extraction disabled                        | Impact of proactive automation vs. reactive only                                |
-| **No personality state**    | Personality projection replaced with defaults               | Impact of personality adaptation vs. static behavior                            |
+| Ablation                     | What Is Removed                                             | What Is Measured                                                                |
+| ---------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| **No skills**                | All skills uninstalled; system starts cold                  | Baseline reasoning cost without any seed behaviors; measures cold-start penalty |
+| **No knowledge graph**       | Knowledge validation pipeline disabled                      | Impact of validated facts vs. raw memory alone                                  |
+| **No memory graph**          | Narrative memory and retrieval disabled                     | Impact of experience recall vs. no recall                                       |
+| **No macros**                | Macro discovery and compilation disabled                    | Impact of execution compression vs. raw execution                               |
+| **No skill-derived macros**  | Skills execute via RPU only; no compression of skill traces | Impact of skill-to-macro transformation vs. skill-only baseline                 |
+| **No temporal intent**       | Temporal pattern extraction disabled                        | Impact of proactive automation vs. reactive only                                |
+| **No personality state**     | Personality projection replaced with defaults               | Impact of personality adaptation vs. static behavior                            |
+| **No entity permissions**    | All entities have full access (no filtering)                | Impact of permission-based retrieval vs. unrestricted access                    |
+| **No dual-access knowledge** | Knowledge is either fully accessible or fully restricted    | Impact of factual propagation with contextual protection vs. all-or-nothing     |
+| **No channel approval**      | All channels active by default                              | Impact of Admin-gated channel activation vs. open channel model                 |
 
 Each ablation is run for 100 task executions per task type, with results compared to the full system and the Phase 2 baseline.
 
@@ -153,6 +156,13 @@ The taxonomy ensures that evaluation covers both compressible and non-compressib
 - **Security audit detection rate** — true positive and false positive rates for skill security audit findings
 - **Token compression ratio by model class** — percentage token reduction per model class, compared across sizes and architectures
 - **Cross-model consistency of macro hit rates** — whether the same patterns become macros across different model classes
+- **Retrieval latency** — time to complete the six-step retrieval filter chain per RPU invocation
+- **Permission check overhead** — additional latency introduced by entity permission validation
+- **Entity resolution accuracy** — precision and recall of identity matching across channels
+- **Merge suggestion quality** — rate of true positive vs. false positive merge suggestions
+- **Dual-access projection correctness** — rate of contextual metadata leakage (should be zero)
+- **Channel approval latency** — time from channel connection to Admin approval to active status
+- **Permission delegation chain depth** — typical depth of delegation chains in practice
 
 ---
 

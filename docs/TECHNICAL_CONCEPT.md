@@ -14,11 +14,14 @@ This document describes B.Y.T.E. (Behavior Yielding Through Evolution), a distri
 
 ### Core Subsystems
 
-- [GRAPH.md](core/GRAPH.md) — World-state graph model (diagrams, design heuristics, query complexity)
+- [GRAPH.md](core/GRAPH.md) — World-state graph model (diagrams, design heuristics, query complexity, trust hierarchy)
 - [RPU.md](core/RPU.md) — Reasoning Processing Unit (contract, error handling, model versioning)
 - [ORCHESTRATION.md](core/ORCHESTRATION.md) — Semantic orchestration primitives (semantics, composition laws)
 - [MACROS.md](core/MACROS.md) — Macro system (mining algorithms, validation, demotion, skill-derived macros, hierarchical composition)
 - [REGISTRY.md](core/REGISTRY.md) — Code registry (versioning, dependency resolution, transpilation)
+- [ENTITIES.md](core/ENTITIES.md) — Entity model (schema, trust levels, lifecycle, permissions)
+- [CHANNELS.md](core/CHANNELS.md) — Channel architecture (approval, bidirectional flow, control signals)
+- [RETRIEVAL.md](core/RETRIEVAL.md) — Retrieval pipeline (filter chain, dual-access projection)
 
 ### Experimental Extensions
 
@@ -93,8 +96,40 @@ These principles govern every design decision:
 - **Reasoning is externalized into accumulated structure.** The objective is not to maximize model intelligence but to minimize the amount of reasoning required to produce intelligent behavior.
 - **Temporal intent is kernel-scheduled, not AI-proposed.** The temporal intent generator operates as a deterministic cron subsystem. The RPU identifies temporal patterns and presents scheduled or one-time job suggestions to the user. Upon approval, these become cron entries that fire automatically. Each tool service declares its own destructiveness level (read-only vs. state-changing); non-destructive entries may auto-execute once confidence crosses a configurable threshold, while destructive entries always require per-execution approval. User dismissal feeds back into confidence decay. This does not violate the "AI proposes intent; the kernel executes" invariant — the AI proposes the schedule, the kernel executes the schedule.
 - **Graceful degradation is mandatory.** The system must remain functional and safe when disconnected from the homelab, when network links fail, or when sensor inputs become unreliable.
+- **Admin is the root of trust.** A single Admin entity exists from bootstrap, linked to the primary webUI. All other entities start untrusted. Trust is never automatic — it is explicitly granted by a higher-trust entity.
+- **Admin ceiling is irrevocable.** No permission delegation chain can produce effective permissions equal to or greater than Admin. Admin is always the ceiling.
+- **Memory is not owned by entities.** All memory lives in the shared graph with metadata describing context. Entities are retrieval policy definitions, not memory containers.
+- **History is immutable; derivatives are invalidated.** Memories and events are never modified. Knowledge and macros are invalidated when source entity permissions change.
+- **Privacy is structural.** Inferred from who is involved and what the memory concerns, encoded as metadata that survives abstraction into knowledge.
+- **Knowledge propagates; context remains scoped.** Factual knowledge can become globally accessible while relationship and provenance context stays bound to the originating entity relationship.
+- **Channels are bidirectional but control-gated.** All channels produce and consume events. Control signal authority requires explicit enablement (default: disabled).
+- **Everything is permission-based.** Domains, tools, sensors, control signals — all access is gated by entity permissions enforced by the kernel.
 
-### 1.5 Implementation Note: Two Stores, Seven Graphs
+### 1.5 Entity Model
+
+An **Entity** is any persistent thing that can participate in events. Examples include internal agent personas, administrative users, general users, pets, physical objects, locations, and groups.
+
+Entities are lightweight graph nodes with relationships and metadata, not containers for isolated memories. The runtime maintains a single immutable history and a unified knowledge graph from which multiple entity-specific projections are derived.
+
+```
+Entity
+├── Identity
+├── Type (internal | external)
+├── Trust Level (admin | admin_delegate | trusted_user | sub_user | untrusted)
+├── Relationships
+├── State (projection of history)
+└── Permissions (retrieval policy)
+```
+
+**Internal entities** represent operational projections of the runtime (Technical Assistant, Companion, Stream Host, Automation Agent). They define retrieval policies over the shared graph — accessible domains, privacy levels, allowed channels, tool permissions, and sensor permissions. Internal entities do not require Admin elevation.
+
+**External entities** represent observed participants in the environment. They are constructed from history and graph relationships, starting as untrusted with no access. Admin or admin_delegate must explicitly elevate them and grant permissions.
+
+The Admin entity exists from system bootstrap, pre-linked to the primary webUI session. It is the single root of trust and cannot be demoted or superseded.
+
+→ See [ENTITIES.md](./core/ENTITIES.md) for the full entity model specification.
+
+### 1.6 Implementation Note: Two Stores, Seven Graphs
 
 The seven logical graphs are split across two data stores, reflecting two fundamentally different data models.
 
@@ -125,7 +160,7 @@ The separation reflects that world-state graphs are projections of lived experie
 
 → See [GRAPH.md](./core/GRAPH.md#one-line-architecture-summary) for visual diagrams and design review heuristics.
 
-### 1.6 Cold-Start Problem
+### 1.7 Cold-Start Problem
 
 The system improves over time through accumulated structure, but the initial period — when there is no memory, no knowledge, and no macros — requires specific design attention. **Skills are an optional acceleration; the system works without them.**
 
@@ -305,12 +340,16 @@ Projections that write to the world-state event store produce events. Projection
 
 Projections optimize for correctness, queryability, persistence, and composition. They can be chained — the output of one projection becomes the input of another. The summarization pipeline (section 8) is a chain of projections: situation model into narrative memories, into validated knowledge.
 
-**Channels** transform graph state into external representation. They are bidirectional boundaries between the runtime and the outside world. A channel consumes projected state and translates it into a consumer-facing interface, while also translating external inputs back into events:
+**Channels** transform graph state into external representation and translate external inputs back into events. They are bidirectional boundaries between the runtime and the outside world. All channels are bidirectional — they both produce events into the system and consume projected views from it. The primary orientation (input vs. output) determines the dominant flow, but both directions are always available.
 
 ```
 Graph → Channel → External Surface
 External Surface → Channel → Event
 ```
+
+Channels must be approved by Admin (or admin_delegate with `approve_channels` permission) before they process any events. Unapproved channels exist in `pending_approval` status with no event processing capability. Channels are not control channels by default — even Admin-connected channels must be explicitly enabled to send kernel control signals.
+
+The event surface of a channel is analogous to a tool definition: it declares what it produces and what it consumes.
 
 Examples:
 
@@ -321,14 +360,17 @@ Execution Graph → CLI Channel
 Memory Graph → Search API Channel
 Execution Graph → Telemetry Channel
 Perception Graph → Streaming Channel
+Camera Channel → Perception Events (input-oriented)
+Microphone Channel → Perception Events (input-oriented)
 ```
 
-Channels optimize for rendering, filtering, sorting, formatting, and aggregation. They are leaves in the transformation pipeline — nothing projects further from a channel. Channels are replaceable and independent; the same projection graph can serve any number of channels without conceptual changes.
+Channels optimize for rendering, filtering, sorting, formatting, and aggregation. Channels are replaceable and independent; the same projection graph can serve any number of channels without conceptual changes. Channels are responsible for their own caching and state aggregation — logically both sides see events, but channels may aggregate to present a "current state" view.
 
 The distinction matters because projections build runtime knowledge while channels consume it. Projections are durable; channels come and go. The browser, Discord, voice interfaces, and the wearable edge node are all channels attached to the same projection graph.
 
 **Decision rules:** If a transformation doesn't produce durable runtime knowledge, it's a channel, not a projection. If a channel tries to produce runtime state, it should emit events instead. If a new subsystem doesn't fit naturally into this model, it's introducing a second source of truth.
 
+→ See [CHANNELS.md](./core/CHANNELS.md) for the full channel specification: approval workflow, entity binding, control signals, bidirectional flow.
 → See [GRAPH.md](./core/GRAPH.md#the-full-projection-pipeline) for visual diagrams of the projection and channel flow.
 
 ### 4.5.1 Projection Types
@@ -354,6 +396,47 @@ Provenance is first-class. Every action is traceable to its origin: perception p
 ### 4.8 Git, Not Blockchain
 
 The goal is not distributed consensus. The goal is tamper-evident history, causal lineage, replayability, auditability, and reproducibility. The architecture is closer to Git plus Event Sourcing plus Knowledge Graph plus Distributed Runtime than to a blockchain.
+
+### 4.9 Entity Model and Memory Scoping
+
+An **Entity** is any persistent thing that can participate in events. Entities are lightweight graph nodes with identity, relationships, and permissions — not memory containers. All memory lives in the shared graph with metadata describing context.
+
+**Internal entities** (Technical Assistant, Companion, Stream Host, Automation Agent) are operational projections of the runtime. They define retrieval policies over the shared graph: accessible domains, privacy levels, allowed channels, tool permissions, and sensor permissions. Internal entities do not own separate memory stores.
+
+**External entities** (Admin, family members, guests, pets, devices) are constructed from history and graph relationships. They start as untrusted with no access. Admin or admin_delegate must explicitly elevate them and grant permissions.
+
+The Admin entity exists from system bootstrap, pre-linked to the primary webUI. It is the single root of trust and cannot be demoted or superseded.
+
+Memory does not belong to an entity. Instead, it carries metadata describing its context:
+
+```
+Memory
+├── Subject(s) — which entities are involved
+├── Origin Channel — where it came from
+├── Topic — what it concerns
+├── Privacy Classification — inferred from who and what
+├── Relationship Context — which relationship it exists within
+└── Domain Tags — technical, project, research, interaction, relationship, personal, private, credentials
+```
+
+Privacy is inferred from the structure of memory: who is involved and what the memory concerns. This information becomes part of memory metadata and survives abstraction into knowledge.
+
+Knowledge carries dual access levels: factual content (globally accessible when domain permissions allow) and contextual metadata (scoped to the originating relationship). This prevents accidental leakage of contextual information while allowing useful abstractions to propagate.
+
+Retrieval is the intersection of multiple filters:
+
+```
+Candidate Memory
+    ∩ Entity Policy (accessible domains, privacy levels)
+    ∩ Channel Policy (allowed/blocked domains, privacy ceiling)
+    ∩ Memory Domain (task-relevant domains)
+    ∩ Privacy Rules (privacy level <= effective ceiling)
+    ∩ Task Relevance (semantic similarity to current task)
+    = Active Context
+```
+
+→ See [ENTITIES.md](./core/ENTITIES.md) for the full entity model: schema, trust levels, lifecycle, permissions.
+→ See [RETRIEVAL.md](./core/RETRIEVAL.md) for the retrieval pipeline: filter chain, dual-access projection, RPU integration.
 
 ---
 
@@ -708,7 +791,35 @@ The event log is the complete, unfiltered record of all perception, situation mo
 
 Narrative memories are consolidated experiences indexed for long-term recall. A sequence of situation model from a trip becomes "visited location Y, encountered situation Z, took action W, outcome was positive." Narrative memories carry temporal and contextual metadata — frequency, timing, conditions — that enables temporal pattern extraction during knowledge validation. Narrative memories populate the memory graph and serve as context for future RPU invocations.
 
+Every memory carries explicit metadata describing its context:
+
+```
+Memory
+├── content: the memory content
+├── subjects: [entity_id, ...]           // which entities are involved
+├── origin_channel: channel_id            // where it came from
+├── topic: string                         // what it concerns
+├── privacy: public | restricted | private | confidential
+├── relationship_context: entity_id       // which relationship it exists within
+├── domains: [domain, ...]                // technical, project, research, interaction, relationship, personal, private, credentials
+├── derived_from: event_hash              // provenance to source event
+└── knowledge_provenance: { ... }         // if generalized, who it was learned from
+```
+
+Privacy is inferred from the structure of memory — who is involved and what the memory concerns:
+
+```
+subject=Admin + topic=personal_life -> private domain
+subject=Admin + topic=runtime_architecture -> technical domain
+subject=sub_user + topic=anything -> restricted (ceiling)
+origin_channel=public_stream -> public (floor)
+```
+
+Admin can override inferred privacy levels.
+
 Validated knowledge is extracted from situation model and narrative memories through corroboration, testing against conflicting evidence, and consistency checks. A fact becomes knowledge only when it survives repeated validation across independent events. Facts are held in a "hypothesis" state when contradictory evidence exists. Once a fact reaches sufficient confidence, it enters the knowledge graph.
+
+Knowledge carries **dual access levels**: factual content (globally accessible when domain permissions allow) and contextual metadata (scoped to the originating relationship). When knowledge is accessed by the originating entity, both factual content and contextual metadata are returned. When accessed by a different entity with matching domain permissions, only the factual content is returned — the contextual metadata (who taught this, under what relationship) is stripped or anonymized. This prevents accidental leakage of contextual information while allowing useful abstractions to propagate.
 
 The pipeline is itself a chain of projections. Each stage — situation model to narrative memories, narrative memories to validated knowledge — is a projection transforming graph state into graph state.
 
@@ -778,9 +889,35 @@ The memory graph indexes by semantic similarity, temporal proximity, emotional v
 
 The knowledge graph indexes by semantic topic, confidence score, validation status, source provenance, and contradiction history. This enables queries like "what facts are known about topic X and how confident are we."
 
-The summarization pipeline is what makes the six-graph model operationally viable. Without it, queries across the full event log would be prohibitively expensive. With it, each graph operates on appropriately summarized data, and the memory and knowledge graphs emerge naturally from the pipeline at different compression levels.
+The summarization pipeline is what makes the two-store, seven-graph model operationally viable. Without it, queries across the full event log would be prohibitively expensive. With it, each graph operates on appropriately summarized data, and the memory and knowledge graphs emerge naturally from the pipeline at different compression levels.
 
 The pipeline runs continuously, with summarization depth adjustable based on compute availability. In dynamic repartition mode, the offline optimization loop can re-summarize historical situation model with improved algorithms, updating the memory and knowledge graphs without touching the immutable event log.
+
+### 8.4 Retrieval Model
+
+Memory retrieval is the intersection of multiple filters. Only memories satisfying all constraints become part of active reasoning:
+
+```
+Candidate Memory
+    ∩ Entity Policy (accessible domains, privacy levels)
+    ∩ Channel Policy (allowed/blocked domains, privacy ceiling)
+    ∩ Memory Domain (task-relevant domains)
+    ∩ Privacy Rules (privacy level <= effective ceiling)
+    ∩ Task Relevance (semantic similarity to current task)
+    = Active Context
+```
+
+The retrieval pipeline operates in five steps:
+
+1. **Entity Trust Check** — if the requesting entity is untrusted, return empty context.
+2. **Channel Policy** — compute effective domains (entity ∩ channel) and effective privacy ceiling (min of entity and channel).
+3. **Domain and Privacy Filter** — query memory and knowledge graphs with effective constraints.
+4. **Relationship Context Filter** — prioritize memories where the entity is directly involved; apply dual-access knowledge projection (full metadata for originating relationships, stripped metadata for cross-relationship access).
+5. **Task Relevance** — semantic similarity scoring, ranking, and truncation.
+
+The output is a `ContextProjection` that becomes the context field in the RPU request.
+
+→ See [RETRIEVAL.md](./core/RETRIEVAL.md) for the full retrieval pipeline specification.
 
 ---
 

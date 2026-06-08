@@ -104,8 +104,60 @@ This document defines all terms used across the B.Y.T.E. architecture specificat
 
 **Signal-to-Intent Pipeline** — The three-layer process that converts raw sensor streams into actionable intent: perception processing, situation model generation, and intent estimation.
 
-**Summarization Pipeline** — The downstream pipeline that converts situation model into narrative memories and validated knowledge. Makes the six-graph model operationally viable by reducing volume while preserving signal.
+**Summarization Pipeline** — The downstream pipeline that converts situation model into narrative memories and validated knowledge. Makes the two-store, seven-graph model operationally viable by reducing volume while preserving signal.
 
 **Narrative Memory** — A consolidated experience indexed for long-term recall. A sequence of situation model compressed into a retrievable memory unit.
 
 **Knowledge Validation** — The process by which proposed facts become validated knowledge. Requires corroboration across independent events, contradiction detection, confidence scoring, and consistency checks.
+
+### Entity Model
+
+**Entity** — A lightweight graph node with identity, type, relationships, state (projection of history), and permissions (retrieval policy). Entities are not memory containers; all memory lives in the shared graph with metadata describing context.
+
+**Internal Entity** — An operational projection of the runtime (Technical Assistant, Companion, Stream Host, Automation Agent). Defines retrieval policies over the shared graph. Does not require Admin elevation.
+
+**External Entity** — An observed participant in the environment (Admin, family member, guest, pet, device). Constructed from history and graph relationships. Starts as untrusted; requires explicit elevation by Admin or admin_delegate.
+
+**Admin** — The primary Admin entity. Exists from system bootstrap, pre-linked to the primary webUI. Single root of trust, irrevocable, cannot be superseded.
+
+**Admin Delegate** — An Admin user (Discord-style server admin). Can manage channels, entities, and permissions but cannot supersede the Admin.
+
+**Sub-User** — An elevated external entity with limited, specific permissions granted by Admin or admin_delegate.
+
+**Untrusted Entity** — The default trust level for all newly discovered entities. No access to any domain, tool, sensor, or control signal.
+
+### Permissions and Trust
+
+**Permission** — A gate on access to domains, tools, sensors, or control signals. Enforced by the kernel, not by entities. Follows a Discord-style hierarchy where no delegation chain can produce permissions equal to or greater than Admin.
+
+**Admin Ceiling Invariant** — No permission delegation chain can produce effective permissions equal to or greater than Admin. Admin is always the ceiling.
+
+**Domain Access** — Permission to read or write memories and knowledge in a specific domain (technical, project, research, interaction, relationship, personal, private, credentials).
+
+**Privacy Ceiling** — The maximum privacy level an entity or channel can access. The effective ceiling is the more restrictive of the entity's ceiling and the channel's ceiling.
+
+**Control Channel** — A channel explicitly enabled by Admin to send kernel control signals. Default: disabled, even for Admin-connected channels.
+
+### Channels
+
+**Channel** — A bidirectional boundary between the runtime and an external surface. All channels produce events into the system and consume projected views from it. Must be Admin-approved before processing events.
+
+**Fixed Channel** — A channel bound to specific entities and sessions at configuration time (e.g., Discord DM to a specific user).
+
+**Dynamic Channel** — A channel that resolves entity identity at event time using voice prints, face recognition, tokens, or contextual inference (e.g., speech-to-text identifying speakers).
+
+**Control Signal** — A high-priority event that triggers immediate kernel action (pause, resume, terminate, escalate, approve, reject, elevate entity, merge identities, etc.). Requires control_channel authority.
+
+**Sensor Control Signal** — A command from the kernel to an input channel to adjust sensor behavior (pan, tilt, zoom, resolution, mute, activate, deactivate).
+
+### Retrieval and Knowledge
+
+**Retrieval Pipeline** — The filter chain that produces ContextProjection for RPU invocations: entity trust check -> channel policy -> domain/privacy filter -> relationship context -> task relevance.
+
+**Dual-Access Knowledge** — Knowledge entries that carry two access levels: factual content (globally accessible when domain permissions allow) and contextual metadata (scoped to the originating relationship). Prevents contextual leakage while allowing factual propagation.
+
+**Privacy Inference** — The process of deriving privacy levels from memory structure: who is involved (subjects) and what the memory concerns (topic). Admin can override inferred levels.
+
+**Identity Resolution** — The process of detecting that identifiers across different channels refer to the same entity. Presents merge suggestions to Admin or delegated users.
+
+**Identity Merge** — The operation of unifying multiple channel identifiers under a single entity. Logged as an event; Admin notified of all merges; reversible.

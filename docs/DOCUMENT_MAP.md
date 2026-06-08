@@ -17,7 +17,7 @@ START_HERE.md (entry point)
     │
     └──→ README.md (project overview)
             │
-            ├──→ TECHNICAL_CONCEPT.md (core specification, Sections 1–11)
+            ├──→ TECHNICAL_CONCEPT.md (core specification, Sections 1–18)
             │       │
             │       ├──→ core/GRAPH.md (world-state graph)
             │       ├──→ core/RPU.md (reasoning coprocessor)
@@ -52,7 +52,7 @@ START_HERE.md (entry point)
 1. [START_HERE.md](../START_HERE.md) — orientation
 2. [README.md](../README.md) — project abstract and navigation
 3. [REFERENCE.md](REFERENCE.md) — terminology (keep open)
-4. [TECHNICAL_CONCEPT.md](TECHNICAL_CONCEPT.md#1-introduction) — core specification (Sections 1–11)
+4. [TECHNICAL_CONCEPT.md](TECHNICAL_CONCEPT.md#1-introduction) — core specification (Sections 1–18)
 5. [core/DESIGN_DECISIONS.md](core/DESIGN_DECISIONS.md) — rationale behind choices
 
 ### Technical Readers (Deep Dive)
@@ -82,28 +82,28 @@ After first pass, read core documents as needed:
 
 ## Document Status
 
-| Document                                                       | Status                                                                                    | Audience             |
-| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------- |
-| [START_HERE.md](../START_HERE.md)                              | Complete                                                                                  | Everyone             |
-| [README.md](../README.md)                                      | Complete                                                                                  | Everyone             |
-| [CONCEPTUAL_OVERVIEW.md](CONCEPTUAL_OVERVIEW.md)               | Complete                                                                                  | Everyone             |
-| [REFERENCE.md](REFERENCE.md)                                   | Complete                                                                                  | Everyone             |
-| [DOCUMENT_MAP.md](DOCUMENT_MAP.md)                             | Complete (new)                                                                            | Everyone             |
-| [TECHNICAL_CONCEPT.md](TECHNICAL_CONCEPT.md#1-introduction)    | Complete (expanded — two stores, seven graphs, optional skills, captured content)         | Technical            |
-| [core/GRAPH.md](core/GRAPH.md)                                 | Complete (expanded — two-store architecture, cross-store references)                      | Technical            |
-| [core/RPU.md](core/RPU.md)                                     | Complete (expanded)                                                                       | Technical            |
-| [core/ORCHESTRATION.md](core/ORCHESTRATION.md)                 | Complete (expanded)                                                                       | Technical            |
-| [core/MACROS.md](core/MACROS.md)                               | Complete (expanded — captured content spectrum, plan artifact capture, store locations)   | Technical            |
-| [core/REGISTRY.md](core/REGISTRY.md)                           | Complete (expanded — skills comparison, store location)                                   | Technical            |
-| [core/EDGE_ARCHITECTURE.md](core/EDGE_ARCHITECTURE.md)         | Complete (new)                                                                            | Technical            |
-| [core/MULTIMODAL_INTERFACE.md](core/MULTIMODAL_INTERFACE.md)   | Complete (expanded)                                                                       | Technical            |
-| [core/OFFLINE_OPTIMIZATION.md](core/OFFLINE_OPTIMIZATION.md)   | Complete (expanded — Phase 4/5 activity labels, store labels, manual trigger)             | Technical            |
-| [core/SECURITY.md](core/SECURITY.md)                           | Complete (expanded — two-store integrity, skill audit, provenance validation)             | Technical            |
-| [core/EVALUATION.md](core/EVALUATION.md)                       | Complete (expanded — skill ablations, plan artifact metric)                               | Technical / Research |
-| [core/KNOWN_GAPS.md](core/KNOWN_GAPS.md)                       | Complete (expanded — two-store gaps, skill gaps, plan artifact gaps)                      | Technical / Research |
-| [core/DESIGN_DECISIONS.md](core/DESIGN_DECISIONS.md)           | Complete (expanded — two stores, optional skills, captured content)                       | Technical            |
-| [core/THREAT_MODEL.md](core/THREAT_MODEL.md)                   | Complete (new)                                                                            | Technical / Security |
-| [core/ARCHITECTURE_DIAGRAMS.md](core/ARCHITECTURE_DIAGRAMS.md) | Complete (expanded — two-store architecture, captured content spectrum, provenance chain) | Technical            |
+| Document                                                       | Status   | Audience             |
+| -------------------------------------------------------------- | -------- | -------------------- |
+| [START_HERE.md](../START_HERE.md)                              | Complete | Everyone             |
+| [README.md](../README.md)                                      | Complete | Everyone             |
+| [CONCEPTUAL_OVERVIEW.md](CONCEPTUAL_OVERVIEW.md)               | Complete | Everyone             |
+| [REFERENCE.md](REFERENCE.md)                                   | Complete | Everyone             |
+| [DOCUMENT_MAP.md](DOCUMENT_MAP.md)                             | Complete | Everyone             |
+| [TECHNICAL_CONCEPT.md](TECHNICAL_CONCEPT.md#1-introduction)    | Complete | Technical            |
+| [core/GRAPH.md](core/GRAPH.md)                                 | Complete | Technical            |
+| [core/RPU.md](core/RPU.md)                                     | Complete | Technical            |
+| [core/ORCHESTRATION.md](core/ORCHESTRATION.md)                 | Complete | Technical            |
+| [core/MACROS.md](core/MACROS.md)                               | Complete | Technical            |
+| [core/REGISTRY.md](core/REGISTRY.md)                           | Complete | Technical            |
+| [core/EDGE_ARCHITECTURE.md](core/EDGE_ARCHITECTURE.md)         | Complete | Technical            |
+| [core/MULTIMODAL_INTERFACE.md](core/MULTIMODAL_INTERFACE.md)   | Complete | Technical            |
+| [core/OFFLINE_OPTIMIZATION.md](core/OFFLINE_OPTIMIZATION.md)   | Complete | Technical            |
+| [core/SECURITY.md](core/SECURITY.md)                           | Complete | Technical            |
+| [core/EVALUATION.md](core/EVALUATION.md)                       | Complete | Technical / Research |
+| [core/KNOWN_GAPS.md](core/KNOWN_GAPS.md)                       | Complete | Technical / Research |
+| [core/DESIGN_DECISIONS.md](core/DESIGN_DECISIONS.md)           | Complete | Technical            |
+| [core/THREAT_MODEL.md](core/THREAT_MODEL.md)                   | Complete | Technical / Security |
+| [core/ARCHITECTURE_DIAGRAMS.md](core/ARCHITECTURE_DIAGRAMS.md) | Complete | Technical            |
 
 ---
 
