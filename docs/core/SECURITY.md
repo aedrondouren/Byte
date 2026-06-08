@@ -79,13 +79,62 @@ The offline optimization loop includes a Skill Security Audit activity that anal
 
 Code components in the registry are stored in the artifact version store — versioned, content-addressed, and cryptographically verifiable. Every component version is immutable once published. The test pipeline ensures that only validated code enters the registry. Cross-store references link component versions to their test runs in the world-state event store, providing full auditability. Edge nodes verify component integrity through cryptographic hashes before making components available for code generation.
 
+## Entity Trust Model
+
+The system uses a hierarchical trust model with Admin as the single root of trust:
+
+- **Admin** exists from bootstrap, pre-linked to the primary webUI. Irrevocable, cannot be superseded.
+- **Admin Delegate** can manage the system but never supersede Admin.
+- **Trusted User** has expanded permissions with possible limited delegation.
+- **Sub-User** has limited, specific permissions granted by a higher-trust entity.
+- **Untrusted** is the default for all new entities — no access to any resource.
+
+Trust is never automatic. No entity becomes trusted through behavior alone. Trust is explicitly granted by a higher-trust entity. The Admin ceiling invariant ensures no delegation chain can produce permissions equal to or greater than Admin.
+
+## Permission Enforcement
+
+All access — domains, tools, sensors, control signals — is gated by entity permissions enforced by the kernel:
+
+- **Domain access** controls which memory/knowledge domains an entity can read or write.
+- **Privacy ceiling** limits the maximum privacy level an entity can access.
+- **Tool permissions** gate access to individual tool capabilities.
+- **Sensor permissions** distinguish between read (receiving perception events) and control (sending sensor commands).
+- **Control channel authority** must be explicitly enabled per channel (default: disabled).
+
+The permission engine validates every access request. Denied access is logged as an event for audit.
+
 ## Channel Security
 
-Channels are trust boundaries between the runtime and external surfaces. Each channel enforces its own authentication, authorization, and rate limiting. Input from any channel is treated as an intent proposal, not a command — the kernel validates and schedules execution regardless of source. Channels on untrusted surfaces (public APIs, third-party messaging platforms) must never receive raw world-state data, only projected and filtered views appropriate to that channel's trust level.
+Channels are trust boundaries between the runtime and external surfaces. No channel processes events until approved by Admin or admin_delegate with `approve_channels` permission. Unapproved channels exist in `pending_approval` status with no event processing capability.
+
+Channels are not control channels by default — even Admin-connected channels must be explicitly enabled to send kernel control signals. This provides a safety layer: if an Admin session is compromised on a secondary channel, the attacker cannot send kernel control signals.
+
+Input from any channel is treated as an intent proposal, not a command — the kernel validates and schedules execution regardless of source. Channels on untrusted surfaces (public APIs, third-party messaging platforms) must never receive raw world-state data, only projected and filtered views appropriate to that channel's entity permissions.
+
+## Identity Merge Security
+
+Identity merging is a security-sensitive operation because it grants one entity access to another entity's memories and knowledge:
+
+- Admin can merge any identities.
+- Admin delegates can merge identities within their permission scope.
+- Trusted users with `merge_identities` permission can only merge their own identities (self-merge across channels).
+- Sub-users cannot merge identities.
+
+All merges are logged as events. Admin is notified of all merges, even delegated ones. Admin can reverse merges.
+
+## Contextual Metadata Protection
+
+The dual-access knowledge model prevents accidental leakage of contextual information:
+
+- Factual knowledge content propagates globally when domain permissions allow.
+- Contextual metadata (who taught this, under what relationship) remains scoped to the originating relationship.
+- The retrieval pipeline strips or anonymizes contextual metadata when knowledge is accessed outside its originating relationship.
 
 ## Observability and Audit
 
 All execution is trace-driven. The trace IR provides a complete audit log of every action taken by the system. This audit trail is tamper-evident through cryptographic hashing and accessible for review. Users must be able to inspect the full execution history, understand why actions were taken, and trace any behavior back to its originating intent proposal and sensor inputs.
+
+All permission changes, channel approvals, entity elevations, and identity merges are recorded as events in the execution graph with full provenance.
 
 ---
 

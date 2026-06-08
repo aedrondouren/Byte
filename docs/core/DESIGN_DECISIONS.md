@@ -281,6 +281,100 @@ Several gaps are acknowledged but not resolved (KNOWN_GAPS.md). The deferral rat
 
 **Trade-off:** The user bears the responsibility of evaluating skills. The advisory audit helps but does not eliminate this burden. False positives and false negatives in the audit are inevitable. This is accepted as the cost of user autonomy and ecosystem openness.
 
+## Why Admin-First Trust
+
+**Decision:** The Admin entity exists from system bootstrap, pre-linked to the primary webUI. All other entities start untrusted. Trust is explicitly granted, never automatic.
+
+**Alternatives considered:**
+
+- Automatic trust based on behavior patterns
+- First-connected entity becomes Admin
+- Multi-admin consensus model
+
+**Reasoning:**
+
+- **Security.** A single, irrevocable root of trust simplifies the security model. There is no ambiguity about who has ultimate authority.
+- **Bootstrap simplicity.** Admin exists from day one — no election or discovery process needed. The primary webUI is the trusted bootstrap channel.
+- **Auditability.** All trust changes flow from Admin through explicit actions. The full delegation chain is traceable.
+- **User autonomy.** The system owner controls who has access. No entity gains access through behavior alone.
+
+**Trade-off:** The Admin is a single point of trust. If Admin credentials are compromised, the system is compromised. This is mitigated by the control channel flag (secondary channels cannot send control signals even with Admin identity) and by channel-level authentication.
+
+## Why Discord-Style Permissions
+
+**Decision:** Permissions follow a Discord-style hierarchy: Admin (irrevocable) -> admin_delegate (can manage, cannot supersede) -> trusted_user -> sub_user. No delegation chain can produce permissions equal to or greater than Admin.
+
+**Alternatives considered:**
+
+- Flat permission model (all-or-nothing)
+- Capability-based model (individual permissions, no hierarchy)
+- Role-based access control (RBAC) with arbitrary role creation
+
+**Reasoning:**
+
+- **Familiar model.** Discord-style permissions are widely understood. Admin delegates manage day-to-day operations while the Admin retains ultimate authority.
+- **Admin ceiling invariant.** The irrevocable Admin prevents privilege escalation attacks through delegation chains.
+- **Graduated trust.** Different entities need different levels of access. A family member needs more access than a guest; a trusted collaborator needs more than a casual user.
+- **Simplicity over flexibility.** RBAC offers more flexibility but adds complexity. The Discord-style hierarchy covers the most common use cases without requiring role configuration.
+
+**Trade-off:** Less flexible than RBAC. Unusual permission configurations may not fit the hierarchy. This is accepted in favor of simplicity and security.
+
+## Why Control Channel Flag
+
+**Decision:** Channels are not control channels by default, even for Admin-connected channels. A channel must be explicitly enabled to send kernel control signals.
+
+**Alternatives considered:**
+
+- All Admin-connected channels have control authority
+- Control signals require per-signal authentication
+- Separate control channel surface (dedicated admin interface)
+
+**Reasoning:**
+
+- **Defense in depth.** Even if an Admin session is compromised on a secondary channel, the attacker cannot send kernel control signals.
+- **Explicit intent.** Enabling control authority is a deliberate administrative action, not an implicit consequence of Admin identity.
+- **Channel diversity.** A channel used for casual interaction (e.g., a Discord channel) should not have control authority even if the Admin uses it. The control channel flag separates identity from authority.
+
+**Trade-off:** Admin must explicitly enable control on each channel they want to use for system management. This adds friction but prevents accidental or malicious control signal injection.
+
+## Why Dual-Access Knowledge
+
+**Decision:** Knowledge entries carry two access levels: factual content (globally accessible when domain permissions allow) and contextual metadata (scoped to the originating relationship).
+
+**Alternatives considered:**
+
+- Knowledge is either fully accessible or fully restricted
+- All knowledge is scoped to originating relationship
+- All knowledge is globally accessible
+
+**Reasoning:**
+
+- **Knowledge propagation.** Useful facts should propagate beyond their originating relationship. If Admin learns that "event sourcing is useful," this fact should be available to sub-users working on technical tasks.
+- **Contextual protection.** The fact that Admin taught this, under what relationship, and in what context is private information. This metadata should not leak to entities outside the originating relationship.
+- **Privacy preservation.** The dual-access model allows factual knowledge to become globally accessible while relationship and provenance context remain scoped.
+
+**Trade-off:** Implementation complexity. The retrieval pipeline must consistently strip contextual metadata for non-originating entities. A single implementation error could leak sensitive relationship information.
+
+## Why Immutable History with Invalidated Derivatives
+
+**Decision:** Memories and events are never modified. Knowledge and macros are invalidated when source entity permissions change.
+
+**Alternatives considered:**
+
+- Delete memories when entity is demoted
+- Modify memories to remove entity references
+- Keep all derivatives regardless of permission changes
+
+**Reasoning:**
+
+- **Provenance integrity.** Memories and events are the shared substrate of the runtime. Modifying them breaks the provenance chain and undermines the tamper-evident history.
+- **Permission respect.** Derived artifacts (knowledge, macros) must respect current trust boundaries. If an entity is demoted, artifacts derived from their execution should be invalidated.
+- **Reversibility.** If an entity is re-elevated, the immutable history is still available for re-derivation. Deleting memories would be irreversible.
+
+**Trade-off:** Storage growth. The immutable history grows indefinitely. The summarization pipeline and retention policies address this by archiving old events to cold storage while keeping summaries in hot storage.
+
+---
+
 ---
 
 **Related:** [KNOWN_GAPS.md](KNOWN_GAPS.md) for the specific gaps that remain unresolved. [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md#14-core-invariants) for the core invariants that drive these decisions.

@@ -37,6 +37,14 @@ When a macro captures a plan artifact (because the repeating subgraph includes t
 
 The summarization pipeline describes the flow from situation model to narrative memories to validated knowledge, but the decision criteria for what crosses each threshold are underspecified. The document discusses confidence decay, temporal validity, and revision chains, but the actual extraction rules — what qualifies as knowledge versus preference versus temporary context — require further definition. This will likely emerge from implementation and testing rather than from theoretical design.
 
+### Privacy Inference Quality
+
+The privacy inference mechanism (inferring privacy levels from "who is involved" and "what the memory concerns") is heuristic-based. Edge cases will exist, such as technical discussions that reveal personal information, or personal conversations that contain technical facts. The inference rules need empirical tuning, and the system should allow Admin override and correction.
+
+### Dual-Access Knowledge Enforcement
+
+The mechanism for separating factual content from contextual metadata at the projection level needs careful implementation. Ensuring that contextual metadata is consistently stripped when knowledge is accessed outside its originating relationship requires rigorous testing. A single leak could expose sensitive relationship information.
+
 ### Knowledge Derived from Skills
 
 Knowledge entries extracted from skill execution traces carry provenance links. This introduces additional gaps:
@@ -120,6 +128,38 @@ Cross-graph reference resolution mechanics and query cost analysis for common pa
 ### Compression Thesis Non-Monotonicity
 
 Knowledge decay, macro demotion, and revision chains mean that structure accumulation is not monotonic. The net effect on "accumulated structure" over time — does it still grow despite decay? — needs formal analysis. The concept of "effective structure" (accumulated minus decayed) should be defined.
+
+## Entity Discovery Quality
+
+The mechanism for discovering external entities from interaction history is underspecified:
+
+- **Entity clustering** — how to distinguish one entity appearing across multiple channels from two entities with similar identifiers. False positives (splitting one entity into two) and false negatives (merging distinct entities) both degrade retrieval quality and security.
+- **Entity state projection** — how efficiently can entity state be projected from accumulated history? As the event log grows, computing entity state from scratch becomes expensive. Incremental projection updates need design.
+- **Internal entity configuration** — how are internal entity retrieval policies (accessible domains, tool permissions, sensor permissions) configured and validated? The policy schema is defined but the configuration interface is not.
+
+## Identity Resolution Accuracy
+
+The identity resolution subsystem needs further specification:
+
+- **Matching algorithms** — what techniques are used to detect potential identity matches across channels? Name similarity, voice print matching, behavioral pattern analysis, and contextual inference all have different accuracy profiles.
+- **Merge suggestion quality** — how to avoid suggesting merges for unrelated entities with similar identifiers (false positives) while catching actual cross-channel identities (false negatives).
+- **Self-merge security** — when a trusted user with `merge_identities` permission self-merges across channels, how does the system verify that the identifiers truly belong to the same person? Channel-level authentication strength varies.
+
+## Permission-Impact Invalidation
+
+When entity permissions change, knowledge and macros derived from that entity must be invalidated. The mechanics need further definition:
+
+- **Invalidation scope** — which knowledge entries and macros are affected? All derived artifacts, or only those directly tied to the demoted entity's execution?
+- **Decay rate tuning** — how fast should knowledge from a demoted entity decay? The accelerated confidence decay rate multiplier needs empirical tuning.
+- **Re-validation triggers** — when does a demoted entity's re-elevation trigger re-validation of previously invalidated artifacts?
+
+## Retrieval Performance
+
+The six-step retrieval filter chain adds latency to every RPU invocation:
+
+- **Filter chain optimization** — can filters be reordered for efficiency? (e.g., cheap entity trust check before expensive semantic similarity scoring).
+- **Index design** — what indexes are needed to support efficient multi-filter queries across domain, privacy, entity, and semantic dimensions?
+- **Caching strategy** — channels are responsible for caching, but what is the cache invalidation strategy when permissions change?
 
 ---
 

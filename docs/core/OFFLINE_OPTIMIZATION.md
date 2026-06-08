@@ -78,6 +78,25 @@ Reads from and writes to world-state event store. Memory and knowledge graph ind
 
 Reads from world-state event store. Historical perception, situation model, and execution traces are packaged as training datasets for improving perception models, situation model generation, and macro discovery algorithms.
 
+### Entity State Refinement (Phase 4)
+
+Reads from world-state event store, writes to entity registry. The offline loop updates entity state projections based on accumulated events:
+
+1. Scans recent events for entity participation (subjects, participants, identifiers).
+2. Updates entity state (last_seen, interaction_count, relationship strength).
+3. Checks for potential identity matches across channels (same name, voice print, behavioral patterns).
+4. Generates merge suggestions for Admin or delegated review.
+
+### Permission-Impact Analysis (Phase 5)
+
+Reads from both stores, writes to both stores. When entity permissions change, the offline loop identifies and invalidates affected derived artifacts:
+
+1. Identifies all knowledge entries where `learned_from` == changed entity.
+2. Applies accelerated confidence decay to affected knowledge entries.
+3. Identifies all macros derived from changed entity's execution.
+4. Demotes affected macros (status: `source_permission_changed`).
+5. If entity is re-elevated, flags affected artifacts for re-validation.
+
 ## Reserved Capacity Guarantees
 
 Even during heavy offline processing:

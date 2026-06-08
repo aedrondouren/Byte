@@ -139,7 +139,7 @@ interface RPURequest {
   objective: string; // What success looks like
   personality: PersonalityState;
   worldState: WorldState;
-  context: ContextProjection;
+  context: ContextProjection; // Filtered by retrieval pipeline (RETRIEVAL.md)
   capturedPlan?: Plan; // From macro execution, present only if the macro captured a plan artifact (MACROS.md)
   taskState?: TaskState;
   previousArtifacts?: Artifact[];
@@ -148,6 +148,19 @@ interface RPURequest {
     hint: string;
     toolResult: unknown;
   }[];
+}
+
+interface ContextProjection {
+  memories: MemoryEvent[]; // Filtered by entity, channel, domain, privacy, relevance
+  knowledge: KnowledgeEntry[]; // Dual-access: factual content + scoped contextual metadata
+  entities: Entity[]; // Relevant entities for current context
+  channel: ChannelPolicy; // Active channel constraints
+  activeEntity: Entity; // The entity this projection is for
+  permissionSummary: {
+    accessibleDomains: string[]; // Domains this entity can access
+    privacyCeiling: string; // Maximum privacy level
+    controlAuthority: boolean; // Can send kernel control signals
+  };
 }
 ```
 

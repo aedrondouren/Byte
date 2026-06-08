@@ -144,48 +144,183 @@
 
 **Residual risk:** Low. Validation + reversibility + auditability + demotion provides strong protection.
 
+### T9: Unauthorized Channel Activation
+
+**Attack:** An unapproved channel attempts to send events or access the system.
+
+**Impact:** Untrusted input could corrupt perception, inject malicious intent proposals, or access restricted world-state data.
+
+**Mitigations:**
+
+- Default-deny: channels in `pending_approval` status have no event processing capability (CHANNELS.md).
+- Events from unapproved channels are logged but not processed.
+- Admin notification triggered on new channel connection.
+- Channel approval requires Admin or admin_delegate with `approve_channels` permission.
+
+**Residual risk:** Low. Default-deny model with explicit approval required.
+
+### T10: Entity Privilege Escalation
+
+**Attack:** A sub-user or trusted user attempts to access domains, privacy levels, tools, or sensors beyond their permissions.
+
+**Impact:** Unauthorized access to private memories, credentials, or destructive tool capabilities.
+
+**Mitigations:**
+
+- Retrieval pipeline enforces permissions at query time (RETRIEVAL.md).
+- Permission engine validates every access request (ENTITIES.md).
+- All access attempts are logged as events with full provenance.
+- Admin ceiling invariant ensures no delegation chain exceeds Admin permissions.
+
+**Residual risk:** Low. Permissions are enforced by the kernel, not by entities.
+
+### T11: Identity Spoofing
+
+**Attack:** An entity attempts to impersonate another entity by using their identifier.
+
+**Impact:** Access to another entity's memories, knowledge, and permissions.
+
+**Mitigations:**
+
+- Channel-level authentication (Discord OAuth, webUI session tokens, voice print verification).
+- Identity resolution flags anomalies (same identifier from different channels, sudden behavior changes).
+- Merge events require Admin or delegated authorization.
+
+**Residual risk:** Medium. Depends on authentication strength of each channel surface.
+
+### T12: Malicious Identity Merge
+
+**Attack:** A sub-user or admin_delegate with `merge_identities` permission merges their identity with a higher-privilege entity to gain access.
+
+**Impact:** Unauthorized access to higher-privilege entity's memories, knowledge, and permissions.
+
+**Mitigations:**
+
+- Merge operations require Admin confirmation or at minimum Admin notification.
+- Trusted users can only self-merge (own identities across channels).
+- Merge events are recorded with full provenance.
+- Admin can reverse merges.
+
+**Residual risk:** Low. Admin oversight on all merges.
+
+### T13: Control Channel Hijacking
+
+**Attack:** An attacker gains access to a channel and attempts to send kernel control signals.
+
+**Impact:** Unauthorized pause/terminate of execution chains, entity elevation, channel approval, or identity manipulation.
+
+**Mitigations:**
+
+- Control channel flag is disabled by default, even for Admin-connected channels.
+- Control signals require explicit channel enablement by Admin.
+- Channel-level authentication provides additional verification.
+- All control signal events are logged with entity provenance.
+
+**Residual risk:** Low. Defense in depth: control flag + authentication + audit.
+
+### T14: Unauthorized Sensor Control
+
+**Attack:** An entity attempts to control sensors (camera pan/tilt/zoom, mic mute) without permission.
+
+**Impact:** Privacy violation (pointing camera at private areas), disruption (muting microphones), or surveillance.
+
+**Mitigations:**
+
+- Sensor permissions enforced by kernel (read vs. control separated).
+- Sensor control events recorded in execution graph.
+- Admin-configured safety constraints on sensor behavior.
+
+**Residual risk:** Low. Permission-based enforcement with audit trail.
+
+### T15: Contextual Metadata Leakage
+
+**Attack:** Knowledge learned in a private context is accessed by an entity that should not know the provenance.
+
+**Impact:** Leakage of who taught what, under what relationship, or in what context.
+
+**Mitigations:**
+
+- Dual-access knowledge projection strips contextual metadata for non-originating entities (RETRIEVAL.md).
+- Factual content propagates; contextual metadata remains scoped.
+- Retrieval pipeline enforces metadata stripping at projection time.
+
+**Residual risk:** Low. Enforced by the retrieval pipeline, not by application logic.
+
+### T16: Admin Delegate Overtake Attempt
+
+**Attack:** An admin_delegate attempts to elevate their own permissions to equal or exceed Admin.
+
+**Impact:** Full system compromise.
+
+**Mitigations:**
+
+- Admin ceiling invariant enforced by construction (ENTITIES.md).
+- Admin trust level is singular and irrevocable.
+- Permission delegation always produces strict subsets.
+- All permission changes are logged and auditable.
+
+**Residual risk:** Low. Enforced by system architecture, not by policy.
+
 ## Trust Boundary Summary
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  Untrusted                                                   │
-│  ┌─────────────────┐  ┌─────────────────┐                   │
-│  │  LLM Provider   │  │  External APIs  │                   │
-│  │  (compromised)  │  │  (compromised)  │                   │
-│  └────────┬────────┘  └────────┬────────┘                   │
-│           │ normalized         │ filtered                   │
-│           │ requests only      │ views only                 │
-├───────────┼────────────────────┼────────────────────────────┤
-│  Semi-Trusted                  │                            │
-│  ┌─────────┴──────────────────┴──────────┐                 │
-│  │          Edge Node (PEN)              │                 │
-│  │  (physical access possible)           │                 │
-│  │  ↓ structured events only             │                 │
-├──┼───────────────────────────────────────┼─────────────────┤
-│  │  Trusted                              │                 │
-│  │  ┌───────────────────────────────────┴───────────────┐  │
-│  │  │              Homelab (Trusted Core)               │  │
-│  │  │  Event Store + Kernel + Memory + Knowledge        │  │
-│  │  │  All execution validated, all events hashed       │  │
-│  │  └───────────────────────────────────────────────────┘  │
-└──┼─────────────────────────────────────────────────────────┘
-   │
-   ▼
-Data flows: untrusted → semi-trusted → trusted (one-way validation)
+│  UNTRUSTED                                                   │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
+│  │ LLM Provider │  │ External APIs│  │ Unapproved   │       │
+│  │ (compromised)│  │ (compromised)│  │ Channels     │       │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘       │
+│         │ normalized      │ filtered        │ no processing  │
+│         │ requests only   │ views only      │                │
+├─────────┼─────────────────┼─────────────────┼────────────────┤
+│  PENDING                  │                 │                │
+│  ┌─────────┴─────────────┴─────────────────┴──────────┐    │
+│  │  Pending Channels (awaiting Admin approval)         │    │
+│  │  ↓ no event processing, no graph access             │    │
+├──┼─────────────────────────────────────────────────────┼────┤
+│  │  SEMI-TRUSTED                                       │    │
+│  │  ┌───────────────────────────────────────────────┐  │    │
+│  │  │  Sub-Users (Admin-elevated external entities)  │  │    │
+│  │  │  ↓ domain-restricted, privacy-capped           │  │    │
+│  │  │  Edge Node (PEN)                               │  │    │
+│  │  │  ↓ structured events only                      │  │    │
+│  │  └───────────────────────────────────────────────┘  │    │
+├──┼─────────────────────────────────────────────────────┼────┤
+│  │  TRUSTED                                            │    │
+│  │  ┌───────────────────────────────────────────────┐  │    │
+│  │  │  Admin (primary webUI + merged identities)     │  │    │
+│  │  │  ↓ full access, all domains, all privacy       │  │    │
+│  │  │  Homelab (Trusted Core)                        │  │    │
+│  │  │  Event Store + Kernel + Memory + Knowledge     │  │    │
+│  │  │  All execution validated, all events hashed    │  │    │
+│  │  └───────────────────────────────────────────────┘  │    │
+└──┼─────────────────────────────────────────────────────┼────┘
+   │                                                     │
+   ▼                                                     ▼
+Trust flows: Admin approves channels -> channels bind to entities ->
+entities have permissions -> permissions filter retrieval
 ```
 
 ## Security Posture Summary
 
-| Threat                       | Likelihood | Impact | Mitigation Effectiveness | Residual Risk |
-| ---------------------------- | ---------- | ------ | ------------------------ | ------------- |
-| T1: Network interception     | Medium     | High   | High                     | Low           |
-| T2: Physical tampering       | Low        | High   | Medium                   | Medium        |
-| T3: LLM compromise           | Medium     | High   | High                     | Low           |
-| T4: Prompt injection         | High       | Medium | High                     | Low           |
-| T5: Malicious code component | Low        | High   | High                     | Low           |
-| T6: Supply chain attack      | Medium     | Medium | Medium                   | Medium        |
-| T7: Event store corruption   | Low        | High   | High                     | Low           |
-| T8: Macro execution attack   | Low        | High   | High                     | Low           |
+| Threat                              | Likelihood | Impact   | Mitigation Effectiveness | Residual Risk |
+| ----------------------------------- | ---------- | -------- | ------------------------ | ------------- |
+| T1: Network interception            | Medium     | High     | High                     | Low           |
+| T2: Physical tampering              | Low        | High     | Medium                   | Medium        |
+| T3: LLM compromise                  | Medium     | High     | High                     | Low           |
+| T4: Prompt injection                | High       | Medium   | High                     | Low           |
+| T5: Malicious code component        | Low        | High     | High                     | Low           |
+| T6: Supply chain attack             | Medium     | Medium   | Medium                   | Medium        |
+| T7: Event store corruption          | Low        | High     | High                     | Low           |
+| T8: Macro execution attack          | Low        | High     | High                     | Low           |
+| T9: Unauthorized channel activation | Medium     | High     | High                     | Low           |
+| T10: Entity privilege escalation    | Medium     | High     | High                     | Low           |
+| T11: Identity spoofing              | Medium     | High     | Medium                   | Medium        |
+| T12: Malicious identity merge       | Low        | High     | High                     | Low           |
+| T13: Control channel hijacking      | Low        | High     | High                     | Low           |
+| T14: Unauthorized sensor control    | Low        | High     | High                     | Low           |
+| T15: Contextual metadata leakage    | Low        | Medium   | High                     | Low           |
+| T16: Admin delegate overtake        | Low        | Critical | High                     | Low           |
 
 ---
 

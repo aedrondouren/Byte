@@ -39,6 +39,10 @@ Perception
     ↓
 Perception Graph
     ↓
+Entity Discovery
+    ↓
+Entities (graph nodes)
+    ↓
 Situation Model Generation
     ↓
 Situation Model
@@ -49,9 +53,17 @@ Intent
     ↓
 Execution Graph
     ↓
+Memory Extraction (with metadata: subjects, domain, privacy, origin)
+    ↓
 Memory Graph
     ↓
+Knowledge Generalization (with preserved provenance, dual-access)
+    ↓
 Knowledge Graph
+    ↓
+Retrieval Pipeline (entity ∩ channel ∩ domain ∩ privacy ∩ relevance)
+    ↓
+ContextProjection → RPU / Execution
 
 Skill (pre-authored, executed via RPU)
     ↓
@@ -89,12 +101,54 @@ Cross-store references use content hashes in events pointing to artifact ID+vers
 
 ### Channels are bidirectional boundaries
 
-```text
+````text
 State Graph → Channel → External Surface (Web, Discord, CLI, API)
 External Surface → Channel → Event
-```
 
-Channels are leaves in the transformation pipeline. Nothing projects further from a channel.
+All channels are bidirectional. Primary orientation determines dominant flow:
+  Input-oriented:  perception events IN, sensor control OUT
+  Output-oriented: world-state projections OUT, user events IN
+
+Channels must be Admin-approved before processing events.
+Control signal authority requires explicit enablement (default: disabled).
+
+### Trust Hierarchy
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│  UNTRUSTED                                                   │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
+│  │ LLM Provider │  │ External APIs│  │ Unapproved   │       │
+│  │              │  │              │  │ Channels     │       │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘       │
+├─────────┼─────────────────┼─────────────────┼────────────────┤
+│  PENDING                 │                 │                │
+│  ┌─────────┴─────────────┴─────────────────┴──────────┐    │
+│  │  Pending Channels (awaiting Admin approval)         │    │
+│  │  ↓ no event processing, no graph access             │    │
+├──┼─────────────────────────────────────────────────────┼────┤
+│  │  SEMI-TRUSTED                                       │    │
+│  │  ┌───────────────────────────────────────────────┐  │    │
+│  │  │  Sub-Users (Admin-elevated external entities)  │  │    │
+│  │  │  ↓ domain-restricted, privacy-capped           │  │    │
+│  │  │  Edge Node (PEN)                               │  │    │
+│  │  │  ↓ structured events only                      │  │    │
+│  │  └───────────────────────────────────────────────┘  │    │
+├──┼─────────────────────────────────────────────────────┼────┤
+│  │  TRUSTED                                            │    │
+│  │  ┌───────────────────────────────────────────────┐  │    │
+│  │  │  Admin (primary webUI + merged identities)     │  │    │
+│  │  │  ↓ full access, all domains, all privacy       │  │    │
+│  │  │  Homelab (Trusted Core)                        │  │    │
+│  │  │  ↓ Event Store + Kernel + Memory + Knowledge   │  │    │
+│  │  └───────────────────────────────────────────────┘  │    │
+└──┼─────────────────────────────────────────────────────┼────┘
+````
+
+Trust flows: Admin approves channels -> channels bind to entities ->
+entities have permissions -> permissions filter retrieval.
+
+````
 
 ### The graph is a DAG
 
@@ -104,7 +158,7 @@ Channels are leaves in the transformation pipeline. Nothing projects further fro
     B   C
      \ /
       D
-```
+````
 
 Multiple chains execute concurrently. Reasoning can fork. Execution paths can merge. Lineage is preserved.
 
