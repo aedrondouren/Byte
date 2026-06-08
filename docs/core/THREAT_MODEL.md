@@ -7,14 +7,14 @@
 
 ## Assumed Attacker Capabilities
 
-| Attacker Type                 | Capabilities                                                          | Trust Level                |
-| ----------------------------- | --------------------------------------------------------------------- | -------------------------- |
-| **External network attacker** | Network interception, MITM, DDoS, port scanning                       | Untrusted                  |
-| **Physical attacker**         | Physical access to edge device, hardware tampering                    | Untrusted                  |
-| **Compromised edge node**     | Full control of PEN, access to local storage and compute              | Semi-trusted (compromised) |
-| **Compromised LLM provider**  | Manipulated model outputs, prompt injection, training data extraction | Untrusted                  |
-| **Malicious insider**         | Access to homelab, ability to modify code registry or event store     | Trusted (but monitored)    |
-| **Supply chain attacker**     | Compromised dependencies, poisoned code components                    | Untrusted                  |
+| Attacker Type                 | Capabilities                                                                       | Trust Level                |
+| ----------------------------- | ---------------------------------------------------------------------------------- | -------------------------- |
+| **External network attacker** | Network interception, MITM, DDoS, port scanning                                    | Untrusted                  |
+| **Physical attacker**         | Physical access to edge device, hardware tampering                                 | Untrusted                  |
+| **Compromised edge node**     | Full control of PEN, access to local storage and compute                           | Semi-trusted (compromised) |
+| **Compromised LLM provider**  | Manipulated model outputs, prompt injection, training data extraction              | Untrusted                  |
+| **Malicious insider**         | Access to homelab, ability to modify code registry, artifact store, or event store | Trusted (but monitored)    |
+| **Supply chain attacker**     | Compromised dependencies, poisoned code components                                 | Untrusted                  |
 
 ## Threat Scenarios
 
@@ -88,10 +88,10 @@
 
 **Mitigations:**
 
-- Mandatory test pipeline validates every component version before adoption (TECHNICAL_CONCEPT.md Section 9.2.2).
+- Code components are stored in the artifact version store with mandatory test pipeline validation before adoption (TECHNICAL_CONCEPT.md Section 9.2.2).
 - Components are content-addressed and immutable once published (SECURITY.md Section 15.8).
 - Edge nodes verify component integrity through cryptographic hashes before use.
-- Cross-graph references link component versions to their test runs, providing full auditability.
+- Cross-store references link component versions to their test runs in the world-state event store, providing full auditability.
 - Deprecation policy allows rapid removal of compromised components (REGISTRY.md: Component Deprecation Policy).
 
 **Residual risk:** Low. Test pipeline + immutability + hash verification + auditability provides strong protection. However, the test pipeline's coverage depends on test quality.
@@ -111,11 +111,11 @@
 
 **Residual risk:** Medium. External dependencies are inherently risky. Version pinning and testing reduce but do not eliminate risk.
 
-### T7: Event Store Corruption
+### T7: World-State Event Store Corruption
 
-**Attack:** The event store is corrupted through hardware failure, software bug, or malicious modification.
+**Attack:** The world-state event store is corrupted through hardware failure, software bug, or malicious modification.
 
-**Impact:** Loss of provenance, incorrect state projections, potential system failure.
+**Impact:** Loss of provenance, incorrect state projections, potential system failure. The artifact version store remains unaffected.
 
 **Mitigations:**
 
@@ -123,12 +123,13 @@
 - Checkpoints accelerate reconstruction from uncorrupted history segments.
 - The append-only model reduces corruption risk (no in-place modification).
 - Regular backups of the event store to separate storage.
+- The artifact version store has independent integrity verification and backup.
 
 **Residual risk:** Low. Hash detection + checkpoints + backups provides strong protection. Recovery from corruption is possible through event replay.
 
 ### T8: Macro Execution Attack
 
-**Attack:** A malicious or corrupted macro is promoted and executes harmful behavior.
+**Attack:** A malicious or corrupted macro is promoted and executes harmful behavior. Macro definitions are stored in the artifact version store; execution traces are recorded in the world-state event store.
 
 **Impact:** The macro could perform unauthorized tool calls, exfiltrate data, or corrupt world-state.
 
@@ -136,9 +137,10 @@
 
 - All macros pass validation tests before activation (SECURITY.md Section 15.7).
 - Macros are fully reversible — they can be decomposed into constituent primitives and verified.
-- Macro execution is auditable through the trace IR.
-- Any macro can be demoted or disabled at any time.
+- Macro execution is auditable through the trace IR in the world-state event store.
+- Any macro can be demoted or disabled at any time in the artifact version store.
 - Macros use Tool Services only, which are bounded by the kernel's execution model.
+- Cross-store references link macro versions to their execution traces for full provenance.
 
 **Residual risk:** Low. Validation + reversibility + auditability + demotion provides strong protection.
 

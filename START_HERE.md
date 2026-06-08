@@ -52,27 +52,27 @@ In plain terms: Can a system get better by _organizing what it has learned_ rath
 ## System at a Glance
 
 ```
-                    ┌─────────────┐
-                    │    You      │
-                    └──────┬──────┘
-                           │ voice, gaze, gestures
-                           ▼
-                    ┌─────────────┐
-                    │  Edge Node  │  ← wearable device (glasses, earbuds, etc.)
-                    │  (fast)     │     processes sensors locally, runs immediate responses
-                    └──────┬──────┘
-                           │ structured events only (no raw audio/video)
-                           ▼
-                    ┌─────────────┐
-                    │  Homelab    │  ← your home server
-                    │  (deep)     │     long-term memory, heavy reasoning, planning
-                    └──────┬──────┘
-                           │ normalized requests only
-                           ▼
-                    ┌─────────────┐
-                    │  AI Models  │  ← cloud or local LLMs
-                    │  (optional) │     used as reasoning coprocessors, not the control system
-                    └─────────────┘
+   ┌─────────────┐
+   │     You     │
+   └──────┬──────┘
+          │   voice, gaze, gestures
+          ▼
+   ┌─────────────┐
+   │  Edge Node  │   ← wearable device (glasses, earbuds, etc.)
+   │   (fast)    │     processes sensors locally, runs immediate responses
+   └──────┬──────┘
+          │   structured events only (no raw audio/video)
+          ▼
+   ┌─────────────┐
+   │   Homelab   │   ← your home server
+   │   (deep)    │     long-term memory, heavy reasoning, planning
+   └──────┬──────┘
+          │   normalized requests only
+          ▼
+   ┌─────────────┐
+   │  AI Models  │   ← cloud or local LLMs
+   │  (optional) │     used as reasoning coprocessors, not the control system
+   └─────────────┘
 ```
 
 **Key principle:** Your raw data (audio, video, biometrics) never leaves your edge device. Only structured, compressed events flow to the homelab. AI models receive only normalized requests — they never control the system.
@@ -81,7 +81,7 @@ In plain terms: Can a system get better by _organizing what it has learned_ rath
 
 ## A Day in the Life
 
-**Morning.** You wake up. The system already knows your schedule because it learned your patterns over weeks. It offers a brief briefing: today's weather, your first meeting, a reminder about the package arriving. You didn't ask — it offered, because it learned that you like morning briefings. You accept with a nod.
+**Morning.** You wake up. The system already knows your schedule because it learned your patterns over weeks. It offers a brief briefing: today's weather, your first meeting, a reminder about the package arriving. You didn't ask — it offered, because it learned that you like morning briefings. You accept with a nod. Whether the system started with a morning briefing skill or discovered the pattern on its own, it has compiled a personalized macro that runs faster and matches your actual preferences.
 
 **Commute.** Your edge device processes your surroundings in real time. It identifies your usual coffee shop, notes the queue length, and suggests an alternative route. All of this happens locally on the device — no data leaves your hardware.
 
@@ -89,7 +89,7 @@ In plain terms: Can a system get better by _organizing what it has learned_ rath
 
 **Evening.** The system summarizes the day into a narrative memory: what happened, what was learned, what patterns emerged. Over time, these memories become validated knowledge — facts the system can rely on without re-deriving.
 
-**Over weeks and months.** The system builds macros — compiled patterns of behavior that used to require full reasoning but now execute deterministically. The weather check that once took 2,000 tokens now takes 200. The morning briefing that required planning now fires automatically from a learned schedule.
+**Over weeks and months.** The system builds macros — compiled patterns of behavior that used to require full reasoning but now execute deterministically. Skills you may have installed are gradually compressed into personalized macros that carry provenance links back to their source. The weather check that once took 2,000 tokens now takes 200. The morning briefing that required planning now fires automatically from a learned schedule. When a skill is updated, the system automatically re-validates its derived macros.
 
 ---
 
@@ -117,13 +117,13 @@ In plain terms: Can a system get better by _organizing what it has learned_ rath
 
 This project is in the **design phase**. Implementation has not yet begun.
 
-| Phase | Component                 | Status          |
-| ----- | ------------------------- | --------------- |
-| 1     | Kernel + Execution Graph  | Design complete |
-| 2     | RPU + Orchestration       | Design complete |
-| 3     | Signal-to-Intent Pipeline | Design complete |
-| 4     | Memory + Knowledge        | Design complete |
-| 5     | Code Registry + Macros    | Research phase  |
-| 6     | Edge + Multimodal         | Conceptual      |
+| Phase | Component                           | Status          |
+| ----- | ----------------------------------- | --------------- |
+| 1     | Kernel + Execution Graph            | Design complete |
+| 2     | RPU + Orchestration                 | Design complete |
+| 3     | Signal-to-Intent Pipeline           | Design complete |
+| 4     | Memory + Knowledge + Skill Registry | Design complete |
+| 5     | Macros + Code Registry              | Research phase  |
+| 6     | Edge + Multimodal                   | Conceptual      |
 
 Phases 1–4 test the core thesis. Phases 5–6 are experimental extensions.

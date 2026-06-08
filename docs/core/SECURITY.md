@@ -31,11 +31,53 @@ When the PEN disconnects from the homelab, it must continue to function safely w
 
 ## Macro Validation and Reversibility
 
-Macros are compiled from execution traces and represent reusable behavior patterns. A malicious or corrupted macro could encode harmful behavior. All macros must pass validation tests before activation. Macros must be fully reversible — the system must be able to decompose any macro back into its constituent primitives and verify its behavior. Macro execution must be auditable through the trace IR, and any macro can be demoted or disabled at any time.
+Macros are compiled from execution traces and represent reusable behavior patterns. Macro definitions are stored in the artifact version store; execution traces are recorded in the world-state event store. A malicious or corrupted macro could encode harmful behavior. All macros must pass validation tests before activation. Macros must be fully reversible — the system must be able to decompose any macro back into its constituent primitives and verify its behavior. Macro execution must be auditable through the trace IR, and any macro can be demoted or disabled at any time.
+
+### Skill-Derived Macro Validation
+
+Macros derived from skill execution traces carry provenance links to their source skill. Validation includes an additional check: the macro's behavior must be equivalent to the source skill's intent, not just the observed trace. This prevents overfitting to a specific execution instance. When a skill is updated, all derived macros are flagged for re-validation against the new version. The provenance chain ensures that no derived artifact executes with stale source references. Macro definitions (artifact store) reference execution traces (event store) for provenance.
+
+## Skill Registry Integrity
+
+Skills are pre-authored behavior definitions installed by the user from any source, stored in the artifact version store. The system does not curate or approve skills. Trust is the user's responsibility. The following integrity measures apply:
+
+- **Content-addressed storage.** Every skill version is identified by its cryptographic hash (SHA-256). Once published, a skill version cannot be changed. The hash is the canonical identifier; semantic version tags are mutable pointers.
+- **Provenance tracking.** All macros and knowledge entries derived from skill execution carry immutable provenance metadata linking them to the specific skill version that produced them. Cross-store references link artifact versions to world-state events.
+- **Version isolation.** When a skill is updated, the new version is stored as a separate artifact. Old versions remain available for derived artifact re-validation and audit.
+- **Open ecosystem boundary.** Skills from untrusted sources execute within the same RPU contract as all other reasoning — the kernel validates outputs, tool calls are authorized, and state updates are verified. A malicious skill cannot execute arbitrary actions; it can only propose intent through the structured RPU contract.
+
+## Skill Security Audit
+
+The offline optimization loop includes a Skill Security Audit activity that analyzes installed skills for known risk patterns. This is advisory — it raises events but does not block skill execution. The audit operates on the skill's instruction file and tool reference declarations, not on runtime behavior.
+
+**Audit categories:**
+
+- **Prompt injection vectors** — skill instructions that attempt to override system prompts, escape the RPU contract, or manipulate the kernel's validation logic.
+- **Dangerous tool access** — skills that request access to tools with destructive capabilities (file deletion, system modification, external API calls with write access). Flagged for user review.
+- **Data exfiltration patterns** — skills that attempt to send structured data to external endpoints not declared in the skill's tool references.
+- **Privilege escalation attempts** — skills that attempt to reference kernel-level functions, bypass the scheduler, or access internal runtime state.
+
+**Audit findings** are recorded as events in the execution graph with the following structure:
+
+```json
+{
+  "type": "security_audit_finding",
+  "skill_id": "skill_example",
+  "skill_version": "1.0.0",
+  "category": "prompt_injection | dangerous_tool_access | data_exfiltration | privilege_escalation",
+  "severity": "low | medium | high | critical",
+  "description": "Skill instruction contains pattern matching known injection technique...",
+  "detected_at": "2024-03-15T03:00:00Z"
+}
+```
+
+**User notification.** Audit findings are surfaced through the active channel. The user decides whether to uninstall the skill, modify it, or ignore the finding. The system does not take automatic action on audit findings.
+
+**Limitations.** The audit is heuristic-based. False positives (flagging benign skills) and false negatives (missing malicious skills) are both possible. The audit complements but does not replace the user's judgment. The RPU contract and kernel validation provide the primary defense — even a malicious skill cannot execute arbitrary actions.
 
 ## Code Registry Integrity
 
-Code components in the registry are versioned, content-addressed, and cryptographically verifiable. Every component version is immutable once published. The test pipeline ensures that only validated code enters the registry. Cross-graph references link component versions to their test runs in the world-state graph, providing full auditability. Edge nodes verify component integrity through cryptographic hashes before making components available for code generation.
+Code components in the registry are stored in the artifact version store — versioned, content-addressed, and cryptographically verifiable. Every component version is immutable once published. The test pipeline ensures that only validated code enters the registry. Cross-store references link component versions to their test runs in the world-state event store, providing full auditability. Edge nodes verify component integrity through cryptographic hashes before making components available for code generation.
 
 ## Channel Security
 

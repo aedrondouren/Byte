@@ -14,7 +14,7 @@
 
 ## Abstract
 
-B.Y.T.E. is a distributed, event-sourced cognitive runtime architecture that unifies perception, reasoning, and action through a Git-like world-state graph. Instead of improving AI agents through larger models or more context, it tests a single hypothesis: **can accumulated structure substitute for repeated inference?** The system converts past reasoning into reusable structure — macros and knowledge graphs — so that the minimum reasoning required to achieve a task decreases over time. A companion code registry provides tested, versioned components for software development tasks.
+B.Y.T.E. is a distributed, event-sourced cognitive runtime architecture that unifies perception, reasoning, and action through a Git-like world-state graph. Instead of improving AI agents through larger models or more context, it tests a single hypothesis: **can accumulated structure substitute for repeated inference?** The system converts past reasoning into reusable structure — macros and knowledge graphs — so that the minimum reasoning required to achieve a task decreases over time. Skills in the existing harness format provide _optional_ seed behaviors; when installed, the system compiles personalized, optimized macros with provenance links back to their source. A companion code registry provides tested, versioned components for software development tasks.
 
 In simple terms: B.Y.T.E. is a system that learns from its own experience. Instead of re-thinking every problem from scratch, it builds up a library of what it has learned — facts it knows, patterns it has seen, and solutions it has found — so that over time, it needs less and less computation to do the same work.
 
@@ -29,7 +29,7 @@ This project is in the **design phase**. Implementation has not yet begun. This 
 The mechanism is a continuous loop:
 
 ```
-Reasoning → Execution → History → Compression → Structure → Less future reasoning
+(Optional: Skills) → Reasoning → Execution → History → Compression → Structure → Less future reasoning
 ```
 
 The thesis is tested across four phases. If Phase 4 (Memory + Knowledge) does not demonstrate a measurable reduction in reasoning cost for equivalent outcomes, the core thesis fails. Phases 5–6 are experimental extensions built on that foundation.
@@ -42,17 +42,13 @@ The thesis is tested across four phases. If Phase 4 (Memory + Knowledge) does no
 | Prompt chains         | Planning-first workflows — plan, execute, observe, compress           |
 | Chatbots              | Channels over world-state — state is primary, conversation is output  |
 | External dependencies | Code registry — tested, versioned components for software development |
+| Cold start            | Optional skills (acceleration, not requirement)                       |
 
 ## Build Phases
 
-| Phase | Component                 | Tests Thesis                           | Status          |
-| ----- | ------------------------- | -------------------------------------- | --------------- |
-| 1     | Kernel + Execution Graph  | Foundation                             | Design complete |
-| 2     | RPU + Orchestration       | Minimal gains                          | Design complete |
-| 3     | Signal-to-Intent Pipeline | Completes reasoning loop               | Design complete |
-| 4     | Memory + Knowledge        | **Significant gains**                  | Design complete |
-| 5     | Code Registry + Macros    | Implementation + execution compression | Research phase  |
-| 6     | Edge + Multimodal         | Mobile perception                      | Conceptual      |
+See [START_HERE.md](START_HERE.md#current-status) for the full build phases table and current status.
+
+Phases 1–4 test the core thesis. Phases 5–6 are experimental extensions.
 
 ## Documentation
 

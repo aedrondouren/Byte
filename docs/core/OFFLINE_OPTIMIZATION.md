@@ -19,25 +19,64 @@ The runtime executes; the offline system evolves.
 
 ## Offline Activities
 
-### Trace Mining and Macro Discovery
+### Skill Security Audit (Phase 4)
 
-The offline loop scans execution traces for repeated patterns using sliding window mining and subgraph matching. This is computationally expensive and runs only during low-demand periods.
+The system analyzes installed skills for known risk patterns. This is an advisory activity — it raises events but does not block skill execution. The audit can be manually triggered by the user when viewing a skill, or run as a background task during offline periods. This serves as the first implementation of background/offline work structure in the system.
 
-### Knowledge Validation
+Since skills are optional, this activity only runs when skills are installed. If no skills are present, the audit has nothing to analyze and remains idle.
 
-Proposed facts from the summarization pipeline are tested against accumulated evidence. Contradiction detection, consistency checks, and confidence scoring run as batch processes.
+Audit categories include:
 
-### Temporal Schedule Refinement
+- **Prompt injection vectors** — skill instructions that attempt to override system prompts or escape the RPU contract.
+- **Dangerous tool access** — skills that request access to tools with destructive capabilities (file deletion, system modification, external API calls with write access).
+- **Data exfiltration patterns** — skills that attempt to send structured data to external endpoints not declared in the skill's tool references.
+- **Privilege escalation attempts** — skills that attempt to access kernel-level functions or bypass the scheduler.
 
-Recurring schedules are adjusted based on observed behavior — shifting timing to better match actual usage patterns, merging overlapping schedules, and pruning schedules whose underlying knowledge has decayed below the activation threshold.
+Audit findings are recorded as events in the execution graph with category, severity, and affected skill metadata. The user is notified through the active channel. The audit is heuristic-based and will produce false positives and false negatives; the user decides whether to act on findings.
 
-### Background Indexing and Refinement
+### Trace Mining and Macro Discovery (Phase 5)
 
-Memory and knowledge graph indexes are rebuilt with improved algorithms. Semantic similarity indexes are updated as new experiences accumulate.
+Reads from world-state event store, writes to artifact version store. The offline loop scans execution traces for repeated patterns using sliding window mining and subgraph matching. This is computationally expensive and runs only during low-demand periods.
 
-### Dataset Generation
+### Skill-to-Macro Transformation (Phase 5)
 
-Historical perception, situation model, and execution traces are packaged as training datasets for improving perception models, situation model generation, and macro discovery algorithms.
+Reads from world-state event store, writes to artifact version store. A specialized discovery path analyzes skill execution traces for repeated patterns. Unlike general trace mining, skill-derived discovery has access to the skill's instruction file as an intent reference, making the equivalence check more tractable. The transformation pipeline:
+
+1. Identifies repeated subgraphs within skill execution traces.
+2. Extracts parameters from the skill's configurable values and observed user overrides.
+3. Distills reasoning at branch points into Reasoning Hints, validated against the skill's stated intent.
+4. Proposes a skill-derived macro with provenance metadata linking it to the source skill and version.
+5. Validates the macro against historical skill execution traces.
+
+### Hierarchical Macro Discovery (Phase 5)
+
+Reads from artifact version store, writes to artifact version store. The offline loop identifies composition patterns among existing macros. When child macros are invoked together repeatedly in a consistent sequence, the system proposes a parent macro that composes them. This runs as a separate pass after leaf macro discovery, operating at the macro invocation level rather than the tool call level.
+
+### Knowledge Validation (Phase 4)
+
+Reads from world-state event store, writes to world-state event store. Proposed facts from the summarization pipeline are tested against accumulated evidence. Contradiction detection, consistency checks, and confidence scoring run as batch processes.
+
+### Skill Version Impact Analysis (Phase 5)
+
+Reads from both stores, writes to both stores. When a skill is updated, the offline loop re-validates all derived artifacts:
+
+1. Identifies all macros with provenance to the old skill version.
+2. Replays them against execution traces from the new skill version.
+3. Proposes new macro versions with updated provenance if behavior is equivalent.
+4. Identifies all knowledge entries with provenance to the old skill version.
+5. Accelerates confidence decay for entries not corroborated by new skill executions.
+
+### Temporal Schedule Refinement (Phase 4)
+
+Reads from world-state event store, writes to world-state event store. Recurring schedules are adjusted based on observed behavior — shifting timing to better match actual usage patterns, merging overlapping schedules, and pruning schedules whose underlying knowledge has decayed below the activation threshold.
+
+### Background Indexing and Refinement (Phase 4)
+
+Reads from and writes to world-state event store. Memory and knowledge graph indexes are rebuilt with improved algorithms. Semantic similarity indexes are updated as new experiences accumulate.
+
+### Dataset Generation (Phase 4)
+
+Reads from world-state event store. Historical perception, situation model, and execution traces are packaged as training datasets for improving perception models, situation model generation, and macro discovery algorithms.
 
 ## Reserved Capacity Guarantees
 

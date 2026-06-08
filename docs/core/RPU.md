@@ -140,6 +140,7 @@ interface RPURequest {
   personality: PersonalityState;
   worldState: WorldState;
   context: ContextProjection;
+  capturedPlan?: Plan; // From macro execution, present only if the macro captured a plan artifact (MACROS.md)
   taskState?: TaskState;
   previousArtifacts?: Artifact[];
   recentExecution?: {

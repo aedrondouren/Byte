@@ -24,18 +24,19 @@ The core idea is simple: **Can a system get better by organizing what it has lea
 
 Here's how it works:
 
-1. **The system does things** — answers questions, runs automations, helps you work.
-2. **Everything that happens is recorded** — not as a conversation log, but as structured events: what was perceived, what was decided, what was done, what the outcome was.
-3. **Experience is compressed into knowledge** — repeated patterns become facts the system knows. Sequences of events become memories. Frequently-used workflows become compiled routines.
-4. **Future tasks need less thinking** — because the system already knows the facts, remembers the context, and has pre-built routines for common patterns.
+1. **(Optional) The user may install skills** — pre-authored behavior definitions in the same format used by existing AI harnesses. These give the system competent behavior from day one, but the system works perfectly without them.
+2. **The system does things** — executes skills through reasoning (if installed), answers questions, runs automations, helps the user work.
+3. **Everything that happens is recorded** — not as a conversation log, but as structured events: what was perceived, what was decided, what was done, what the outcome was.
+4. **Experience is compressed into knowledge** — repeated patterns become facts the system knows. Sequences of events become memories. Frequently-used workflows become compiled routines (macros) that carry provenance links back to their source skills when applicable.
+5. **Future tasks need less thinking** — because the system already knows the facts, remembers the context, and has pre-built routines for common patterns.
 
 The mechanism is a continuous loop:
 
 ```
-Do something → Record what happened → Learn from it → Build structure → Need less thinking next time
+(Optional: Install skills) → Do something → Record what happened → Learn from it → Build structure → Need less thinking next time
 ```
 
-This is the opposite of how most AI systems work. Instead of "bigger model = better," the approach is "better organization = less model needed."
+This is the opposite of how most AI systems work. Instead of "bigger model = better," the approach is "better organization = less model needed." Skills give you optional competence at day one; macros give you optimized, personalized competence over time — with or without skills.
 
 ---
 
@@ -65,20 +66,23 @@ This separation means:
 - **The system is safe** — the AI cannot execute arbitrary actions.
 - **The system is efficient** — the AI is only called when genuine reasoning is needed.
 
-### The Six Knowledge Domains
+### The Seven Knowledge Domains
 
-The system organizes what it knows into six domains:
+The system organizes what it knows into seven domains, stored across two data models:
 
-| Domain            | What It Stores                   | Example                                             |
-| ----------------- | -------------------------------- | --------------------------------------------------- |
-| **Perception**    | What the system has observed     | "User is at their desk, working on a laptop"        |
-| **Execution**     | What the system has done         | "Fetched weather forecast, sent to user"            |
-| **Memory**        | What the system has experienced  | "User asked for weather every morning this week"    |
-| **Knowledge**     | What the system knows to be true | "User prefers morning weather briefings for Boston" |
-| **Macros**        | Patterns that repeat             | Compiled routine: morning briefing workflow         |
-| **Code Registry** | Tested code components           | Validated function: format weather data             |
+| Domain            | What It Stores                   | Example                                             | Store          |
+| ----------------- | -------------------------------- | --------------------------------------------------- | -------------- |
+| **Perception**    | What the system has observed     | "User is at their desk, working on a laptop"        | Event store    |
+| **Execution**     | What the system has done         | "Fetched weather forecast, sent to user"            | Event store    |
+| **Memory**        | What the system has experienced  | "User asked for weather every morning this week"    | Event store    |
+| **Knowledge**     | What the system knows to be true | "User prefers morning weather briefings for Boston" | Event store    |
+| **Skills**        | Pre-authored behavior templates  | Installed skill: morning briefing (from community)  | Artifact store |
+| **Macros**        | Patterns that repeat             | Compiled routine: morning briefing workflow         | Artifact store |
+| **Code Registry** | Tested code components           | Validated function: format weather data             | Artifact store |
 
-Each domain is built from the event history through a process called **projection** — transforming raw events into structured, queryable knowledge.
+Four domains (perception, execution, memory, knowledge) are derived from the system's lived experience as an append-only event stream. Three domains (macros, skills, code registry) are versioned artifacts — entities the system creates, manages, and evolves over time.
+
+Skills are an optional seed — behaviors the user may install to accelerate early competence. The system works without skills, discovering patterns organically. As skills execute (when installed), the system learns from the execution traces and compiles personalized, optimized versions (macros) that carry provenance links back to the original skill.
 
 ### The Learning Pipeline
 
@@ -155,16 +159,16 @@ The system stores information about your preferences, habits, environment, and i
 
 This project is in the **design phase**. Nothing has been implemented yet. Here is the current status:
 
-| Phase | What It Adds                             | Status                                      |
-| ----- | ---------------------------------------- | ------------------------------------------- |
-| **1** | Core kernel and execution system         | Design complete                             |
-| **2** | AI reasoning coprocessor + orchestration | Design complete                             |
-| **3** | Sensor-to-action pipeline                | Design complete                             |
-| **4** | Memory and knowledge systems             | Design complete                             |
-| **5** | Pattern compilation + code registry      | Research phase — algorithms not yet defined |
-| **6** | Wearable edge device + multimodal input  | Conceptual — hardware not yet designed      |
+| Phase | What It Adds                             | Status                                 |
+| ----- | ---------------------------------------- | -------------------------------------- |
+| **1** | Core kernel and execution system         | Design complete                        |
+| **2** | AI reasoning coprocessor + orchestration | Design complete                        |
+| **3** | Sensor-to-action pipeline                | Design complete                        |
+| **4** | Memory, knowledge, and skill registry    | Design complete — harness complete     |
+| **5** | Macros + code registry                   | Research phase — optimization layer    |
+| **6** | Wearable edge device + multimodal input  | Conceptual — hardware not yet designed |
 
-Phases 1–4 are the core system. If Phase 4 does not demonstrate that the system needs less reasoning over time to achieve the same outcomes, the core thesis fails. Phases 5–6 are experimental extensions built on that foundation.
+Phases 1–4 are the core system. Phase 4 (memory + knowledge) is the falsification point for the core thesis. Skills are available from Phase 4 as a harness completeness feature but are not part of the thesis test. Phase 5 adds the optimization layer: compiling skill execution traces and general patterns into deterministic macros. Phases 5–6 are experimental extensions built on that foundation.
 
 ---
 

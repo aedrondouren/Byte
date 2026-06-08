@@ -5,7 +5,9 @@
 > **Prerequisites:** TECHNICAL_CONCEPT.md Section 9.2, ORCHESTRATION.md
 > **Status:** Complete
 
-The code registry is a repository of tested, versioned code components used when writing software — not executed by the runtime. When the model, agents, or users build applications together, they pull from the registry instead of generating code from scratch.
+The code registry is a repository of tested, versioned code components stored in the artifact version store, used when writing software — not executed by the runtime. When the model, agents, or users build applications together, they pull from the registry instead of generating code from scratch.
+
+Code component definitions live in the artifact version store. Test runs and adoption events are recorded in the world-state event store.
 
 ## Dependency Taxonomy
 
@@ -146,4 +148,4 @@ The query interface uses semantic search (capability description → component m
 
 ---
 
-**Related:** [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md#92-code-registry) for the original specification. [ORCHESTRATION.md](ORCHESTRATION.md#core-primitives--semantic-specifications) for the primitives code components consume. [MACROS.md](MACROS.md#relationship-to-macros) for the comparison between macros and code components.
+**Related:** [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md#92-code-registry) for the original specification. [ORCHESTRATION.md](ORCHESTRATION.md#core-primitives--semantic-specifications) for the primitives code components consume. [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md#93-skill-registry) for the relationship between macros, code components, and skills.
