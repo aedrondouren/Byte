@@ -563,26 +563,26 @@ Every inference executes through a structured contract. The RPU receives a reque
 
 ```typescript
 interface RPURequest {
-  function: string;
-  objective: string;
-  personality: PersonalityState;
-  worldState: WorldState;
-  context: ContextProjection;
-  taskState?: TaskState;
-  previousArtifacts?: Artifact[];
+	function: string;
+	objective: string;
+	personality: PersonalityState;
+	worldState: WorldState;
+	context: ContextProjection;
+	taskState?: TaskState;
+	previousArtifacts?: Artifact[];
 }
 
 interface RPUResponse {
-  result: unknown;
-  summary?: string;
-  plan?: Plan;
-  memorySuggestions?: MemoryEvent[];
-  stateUpdates?: StateUpdate[];
-  nextActions?: ActionProposal[];
-  metadata?: {
-    confidence?: number;
-    reasoningMode?: string;
-  };
+	result: unknown;
+	summary?: string;
+	plan?: Plan;
+	memorySuggestions?: MemoryEvent[];
+	stateUpdates?: StateUpdate[];
+	nextActions?: ActionProposal[];
+	metadata?: {
+		confidence?: number;
+		reasoningMode?: string;
+	};
 }
 ```
 
@@ -610,10 +610,10 @@ Personality is stored as structured data rather than prompt text. The trait-vect
 
 ```json
 {
-  "curiosity": 0.9,
-  "humor": 0.4,
-  "technicalDepth": 0.95,
-  "directness": 0.8
+	"curiosity": 0.9,
+	"humor": 0.4,
+	"technicalDepth": 0.95,
+	"directness": 0.8
 }
 ```
 
@@ -671,16 +671,16 @@ Example perception from camera processing:
 
 ```json
 {
-  "type": "perception",
-  "modality": "vision",
-  "timestamp": "2024-01-01T12:00:00Z",
-  "objects": [
-    { "label": "laptop", "confidence": 0.94, "bbox": [120, 80, 340, 260] },
-    { "label": "mug", "confidence": 0.87, "bbox": [400, 200, 450, 280] }
-  ],
-  "scene": { "room": "kitchen", "lighting": "indoor" },
-  "source": "camera_front",
-  "confidence": 0.91
+	"type": "perception",
+	"modality": "vision",
+	"timestamp": "2024-01-01T12:00:00Z",
+	"objects": [
+		{ "label": "laptop", "confidence": 0.94, "bbox": [120, 80, 340, 260] },
+		{ "label": "mug", "confidence": 0.87, "bbox": [400, 200, 450, 280] }
+	],
+	"scene": { "room": "kitchen", "lighting": "indoor" },
+	"source": "camera_front",
+	"confidence": 0.91
 }
 ```
 
@@ -698,16 +698,16 @@ Example situation model:
 
 ```json
 {
-  "type": "situation_model",
-  "interpretation": "user is in focused work session on laptop",
-  "confidence": 0.85,
-  "evidence": {
-    "objects": ["laptop", "mug"],
-    "attention": { "target": "laptop", "duration_ms": 4200 },
-    "cognitive_load": 0.7
-  },
-  "sources": ["per_abc123", "per_def456", "per_ghi789"],
-  "validation_status": "hypothesis"
+	"type": "situation_model",
+	"interpretation": "user is in focused work session on laptop",
+	"confidence": 0.85,
+	"evidence": {
+		"objects": ["laptop", "mug"],
+		"attention": { "target": "laptop", "duration_ms": 4200 },
+		"cognitive_load": 0.7
+	},
+	"sources": ["per_abc123", "per_def456", "per_ghi789"],
+	"validation_status": "hypothesis"
 }
 ```
 
@@ -737,16 +737,16 @@ Example intent:
 
 ```json
 {
-  "type": "intent",
-  "source": "system",
-  "desire": "offer assistance with current task",
-  "confidence": 0.78,
-  "triggered_by": "sm_xyz789",
-  "context": {
-    "situation_model": "user is in focused work session",
-    "duration_minutes": 30,
-    "cognitive_load_trend": "increasing"
-  }
+	"type": "intent",
+	"source": "system",
+	"desire": "offer assistance with current task",
+	"confidence": 0.78,
+	"triggered_by": "sm_xyz789",
+	"context": {
+		"situation_model": "user is in focused work session",
+		"duration_minutes": 30,
+		"cognitive_load_trend": "increasing"
+	}
 }
 ```
 
@@ -754,18 +754,18 @@ Example proposal (derived from intent):
 
 ```json
 {
-  "type": "proposal",
-  "intent_ref": "int_abc123",
-  "actions": [
-    {
-      "type": "rpu_invoke",
-      "function": "generate_assistance_prompt",
-      "context": "current_task_summary"
-    },
-    { "type": "channel_send", "channel": "web_ui", "message_ref": "pending" }
-  ],
-  "priority": "interactive",
-  "resource_estimate": { "tokens": 2000, "duration_ms": 5000 }
+	"type": "proposal",
+	"intent_ref": "int_abc123",
+	"actions": [
+		{
+			"type": "rpu_invoke",
+			"function": "generate_assistance_prompt",
+			"context": "current_task_summary"
+		},
+		{ "type": "channel_send", "channel": "web_ui", "message_ref": "pending" }
+	],
+	"priority": "interactive",
+	"resource_estimate": { "tokens": 2000, "duration_ms": 5000 }
 }
 ```
 
@@ -773,12 +773,12 @@ Example commit (kernel decision):
 
 ```json
 {
-  "type": "commit",
-  "proposal_ref": "prp_def456",
-  "chain_id": "chain_789",
-  "approved_actions": ["rpu_invoke", "channel_send"],
-  "priority": "interactive",
-  "resource_quota": { "tokens": 2000, "timeout_ms": 10000 }
+	"type": "commit",
+	"proposal_ref": "prp_def456",
+	"chain_id": "chain_789",
+	"approved_actions": ["rpu_invoke", "channel_send"],
+	"priority": "interactive",
+	"resource_quota": { "tokens": 2000, "timeout_ms": 10000 }
 }
 ```
 
@@ -1030,13 +1030,13 @@ When skills are installed and executed, macros discovered from their execution t
 
 ```json
 {
-  "provenance": {
-    "source_type": "skill",
-    "source_id": "skill_weather_check",
-    "source_version": "1.2.0",
-    "discovered_at": "2024-03-15T08:00:00Z",
-    "execution_count": 47
-  }
+	"provenance": {
+		"source_type": "skill",
+		"source_id": "skill_weather_check",
+		"source_version": "1.2.0",
+		"discovered_at": "2024-03-15T08:00:00Z",
+		"execution_count": 47
+	}
 }
 ```
 

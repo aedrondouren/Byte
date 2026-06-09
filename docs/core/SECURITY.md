@@ -61,13 +61,13 @@ The offline optimization loop includes a Skill Security Audit activity that anal
 
 ```json
 {
-  "type": "security_audit_finding",
-  "skill_id": "skill_example",
-  "skill_version": "1.0.0",
-  "category": "prompt_injection | dangerous_tool_access | data_exfiltration | privilege_escalation",
-  "severity": "low | medium | high | critical",
-  "description": "Skill instruction contains pattern matching known injection technique...",
-  "detected_at": "2024-03-15T03:00:00Z"
+	"type": "security_audit_finding",
+	"skill_id": "skill_example",
+	"skill_version": "1.0.0",
+	"category": "prompt_injection | dangerous_tool_access | data_exfiltration | privilege_escalation",
+	"severity": "low | medium | high | critical",
+	"description": "Skill instruction contains pattern matching known injection technique...",
+	"detected_at": "2024-03-15T03:00:00Z"
 }
 ```
 

@@ -167,28 +167,28 @@ The retrieval pipeline constructs the ContextProjection for each RPU invocation:
 
 ```typescript
 interface RPURequest {
-  function: string;
-  objective: string;
-  personality: PersonalityState;
-  worldState: WorldState;
-  context: ContextProjection; // from retrieval pipeline
-  taskState?: TaskState;
-  previousArtifacts?: Artifact[];
+	function: string;
+	objective: string;
+	personality: PersonalityState;
+	worldState: WorldState;
+	context: ContextProjection; // from retrieval pipeline
+	taskState?: TaskState;
+	previousArtifacts?: Artifact[];
 }
 
 interface ContextProjection {
-  memories: MemoryEvent[];
-  knowledge: KnowledgeEntry[];
-  entities: EntityDefinition[]; // loaded from Entity Graph
-  entityStates: EntityState[]; // projected from event stream
-  channel: ChannelPolicy;
-  activeEntity: EntityDefinition; // current version from Entity Graph
-  activeEntityState: EntityState; // projected state
-  permissionSummary: {
-    accessibleDomains: string[];
-    privacyCeiling: string;
-    controlAuthority: boolean;
-  };
+	memories: MemoryEvent[];
+	knowledge: KnowledgeEntry[];
+	entities: EntityDefinition[]; // loaded from Entity Graph
+	entityStates: EntityState[]; // projected from event stream
+	channel: ChannelPolicy;
+	activeEntity: EntityDefinition; // current version from Entity Graph
+	activeEntityState: EntityState; // projected state
+	permissionSummary: {
+		accessibleDomains: string[];
+		privacyCeiling: string;
+		controlAuthority: boolean;
+	};
 }
 ```
 

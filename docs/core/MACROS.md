@@ -37,14 +37,14 @@ When the repeating subgraph includes a planning-first execution chain, the plan 
 
 ```json
 {
-  "capturedPlan": {
-    "objective": "Morning briefing for user",
-    "steps": [
-      { "id": 1, "action": "fetch_weather", "description": "Get current forecast" },
-      { "id": 2, "action": "summarize_calendar", "description": "Today's events" },
-      { "id": 3, "action": "fetch_news", "description": "Topics of interest" }
-    ]
-  }
+	"capturedPlan": {
+		"objective": "Morning briefing for user",
+		"steps": [
+			{ "id": 1, "action": "fetch_weather", "description": "Get current forecast" },
+			{ "id": 2, "action": "summarize_calendar", "description": "Today's events" },
+			{ "id": 3, "action": "fetch_news", "description": "Topics of interest" }
+		]
+	}
 }
 ```
 
@@ -139,14 +139,14 @@ Every skill-derived macro carries a provenance block:
 
 ```json
 {
-  "provenance": {
-    "source_type": "skill",
-    "source_id": "skill_weather_check",
-    "source_version": "1.2.0",
-    "discovered_at": "2024-03-15T08:00:00Z",
-    "validated_at": "2024-03-20T03:00:00Z",
-    "execution_count": 47
-  }
+	"provenance": {
+		"source_type": "skill",
+		"source_id": "skill_weather_check",
+		"source_version": "1.2.0",
+		"discovered_at": "2024-03-15T08:00:00Z",
+		"validated_at": "2024-03-20T03:00:00Z",
+		"execution_count": 47
+	}
 }
 ```
 
@@ -284,18 +284,18 @@ When a macro completes and the kernel decides to invoke the RPU for new reasonin
 
 ```typescript
 interface RPURequest {
-  function: string;
-  objective: string;
-  personality: PersonalityState;
-  worldState: WorldState;
-  context: ContextProjection;
-  capturedPlan?: Plan; // Present only if the macro captured a plan artifact
-  recentExecution: {
-    hint: string;
-    toolResult: unknown;
-  }[];
-  taskState?: TaskState;
-  previousArtifacts?: Artifact[];
+	function: string;
+	objective: string;
+	personality: PersonalityState;
+	worldState: WorldState;
+	context: ContextProjection;
+	capturedPlan?: Plan; // Present only if the macro captured a plan artifact
+	recentExecution: {
+		hint: string;
+		toolResult: unknown;
+	}[];
+	taskState?: TaskState;
+	previousArtifacts?: Artifact[];
 }
 ```
 

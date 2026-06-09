@@ -135,32 +135,32 @@ Every RPU invocation follows a structured contract. The kernel constructs the re
 
 ```typescript
 interface RPURequest {
-  function: string; // The reasoning function to execute
-  objective: string; // What success looks like
-  personality: PersonalityState;
-  worldState: WorldState;
-  context: ContextProjection; // Filtered by retrieval pipeline (RETRIEVAL.md)
-  capturedPlan?: Plan; // From macro execution, present only if the macro captured a plan artifact (MACROS.md)
-  taskState?: TaskState;
-  previousArtifacts?: Artifact[];
-  recentExecution?: {
-    // From macro execution (MACROS.md)
-    hint: string;
-    toolResult: unknown;
-  }[];
+	function: string; // The reasoning function to execute
+	objective: string; // What success looks like
+	personality: PersonalityState;
+	worldState: WorldState;
+	context: ContextProjection; // Filtered by retrieval pipeline (RETRIEVAL.md)
+	capturedPlan?: Plan; // From macro execution, present only if the macro captured a plan artifact (MACROS.md)
+	taskState?: TaskState;
+	previousArtifacts?: Artifact[];
+	recentExecution?: {
+		// From macro execution (MACROS.md)
+		hint: string;
+		toolResult: unknown;
+	}[];
 }
 
 interface ContextProjection {
-  memories: MemoryEvent[]; // Filtered by entity, channel, domain, privacy, relevance
-  knowledge: KnowledgeEntry[]; // Dual-access: factual content + scoped contextual metadata
-  entities: Entity[]; // Relevant entities for current context
-  channel: ChannelPolicy; // Active channel constraints
-  activeEntity: Entity; // The entity this projection is for
-  permissionSummary: {
-    accessibleDomains: string[]; // Domains this entity can access
-    privacyCeiling: string; // Maximum privacy level
-    controlAuthority: boolean; // Can send kernel control signals
-  };
+	memories: MemoryEvent[]; // Filtered by entity, channel, domain, privacy, relevance
+	knowledge: KnowledgeEntry[]; // Dual-access: factual content + scoped contextual metadata
+	entities: Entity[]; // Relevant entities for current context
+	channel: ChannelPolicy; // Active channel constraints
+	activeEntity: Entity; // The entity this projection is for
+	permissionSummary: {
+		accessibleDomains: string[]; // Domains this entity can access
+		privacyCeiling: string; // Maximum privacy level
+		controlAuthority: boolean; // Can send kernel control signals
+	};
 }
 ```
 
@@ -168,22 +168,22 @@ interface ContextProjection {
 
 ```typescript
 interface RPUResponse {
-  result: unknown; // Primary output of the reasoning function
-  summary?: string; // Human-readable summary
-  plan?: Plan; // Proposed execution plan
-  memorySuggestions?: MemoryEvent[];
-  stateUpdates?: StateUpdate[];
-  nextActions?: ActionProposal[];
-  metadata?: {
-    confidence?: number; // 0.0–1.0, calibrated against actual correctness
-    reasoningMode?: string; // e.g., "analytical", "creative", "recall"
-    modelVersion?: string; // For debugging probabilistic projections
-    tokenUsage?: {
-      // For cost tracking
-      input: number;
-      output: number;
-    };
-  };
+	result: unknown; // Primary output of the reasoning function
+	summary?: string; // Human-readable summary
+	plan?: Plan; // Proposed execution plan
+	memorySuggestions?: MemoryEvent[];
+	stateUpdates?: StateUpdate[];
+	nextActions?: ActionProposal[];
+	metadata?: {
+		confidence?: number; // 0.0–1.0, calibrated against actual correctness
+		reasoningMode?: string; // e.g., "analytical", "creative", "recall"
+		modelVersion?: string; // For debugging probabilistic projections
+		tokenUsage?: {
+			// For cost tracking
+			input: number;
+			output: number;
+		};
+	};
 }
 ```
 

@@ -126,21 +126,21 @@ The model and agents query the registry through a structured interface:
 
 ```typescript
 interface RegistryQuery {
-  capability: string; // What the component does (e.g., "format date", "validate email")
-  language?: string; // Target language (TS, Go, C++)
-  constraints?: {
-    // Version, dependency, or performance constraints
-    minVersion?: string;
-    maxDependencies?: number;
-    maxComplexity?: string;
-  };
+	capability: string; // What the component does (e.g., "format date", "validate email")
+	language?: string; // Target language (TS, Go, C++)
+	constraints?: {
+		// Version, dependency, or performance constraints
+		minVersion?: string;
+		maxDependencies?: number;
+		maxComplexity?: string;
+	};
 }
 
 interface RegistryResult {
-  component: ComponentRef; // Hash, name, version, description
-  matchScore: number; // How well the component matches the query
-  dependencies: ComponentRef[];
-  testResults: TestSummary; // Pass rate, coverage, last run
+	component: ComponentRef; // Hash, name, version, description
+	matchScore: number; // How well the component matches the query
+	dependencies: ComponentRef[];
+	testResults: TestSummary; // Pass rate, coverage, last run
 }
 ```
 
