@@ -12,26 +12,26 @@
 START_HERE.md (entry point)
 ├──→ CONCEPTUAL_OVERVIEW.md (plain-language)
 │   └──→ REFERENCE.md (glossary)
-└──→ README.md (project overview)
-    ├──→ TECHNICAL_CONCEPT.md (core specification, Sections 1–18)
-    │   ├──→ core/GRAPH.md (world-state graph)
-    │   ├──→ core/RPU.md (reasoning coprocessor)
-    │   ├──→ core/ORCHESTRATION.md (execution primitives)
-    │   ├──→ core/MACROS.md (macro system)
-    │   ├──→ core/REGISTRY.md (code registry)
-    │   ├──→ core/ENTITIES.md (entity model, store strategy)
-    │   ├──→ core/CHANNELS.md (channel architecture)
-    │   ├──→ core/RETRIEVAL.md (retrieval pipeline)
-    │   ├──→ core/EDGE_ARCHITECTURE.md (edge node)
-    │   ├──→ core/MULTIMODAL_INTERFACE.md (multimodal input)
-    │   ├──→ core/OFFLINE_OPTIMIZATION.md (background loop)
-    │   ├──→ core/SECURITY.md (security & privacy)
-    │   ├──→ core/EVALUATION.md (evaluation methodology)
-    │   ├──→ core/KNOWN_GAPS.md (open problems)
-    │   ├──→ core/DESIGN_DECISIONS.md (rationale)
-    │   ├──→ core/THREAT_MODEL.md (threat analysis)
-    │   └──→ core/ARCHITECTURE_DIAGRAMS.md (flow diagrams)
-    └──→ REFERENCE.md (glossary)
+├──→ README.md (project overview)
+│   └──→ PHASES.md (canonical build phase status)
+└──→ TECHNICAL_CONCEPT.md (core specification, Sections 1–18)
+    ├──→ core/GRAPH.md (world-state graph)
+    ├──→ core/RPU.md (reasoning coprocessor)
+    ├──→ core/ORCHESTRATION.md (execution primitives)
+    ├──→ core/MACROS.md (macro system)
+    ├──→ core/REGISTRY.md (code registry)
+    ├──→ core/ENTITIES.md (entity model, store strategy)
+    ├──→ core/CHANNELS.md (channel architecture)
+    ├──→ core/RETRIEVAL.md (retrieval pipeline)
+    ├──→ core/EDGE_ARCHITECTURE.md (edge node)
+    ├──→ core/MULTIMODAL_INTERFACE.md (multimodal input)
+    ├──→ core/OFFLINE_OPTIMIZATION.md (background loop)
+    ├──→ core/SECURITY.md (security & privacy)
+    ├──→ core/EVALUATION.md (evaluation methodology)
+    ├──→ core/KNOWN_GAPS.md (open problems)
+    ├──→ core/DESIGN_DECISIONS.md (rationale)
+    ├──→ core/THREAT_MODEL.md (threat analysis)
+    └──→ core/ARCHITECTURE_DIAGRAMS.md (flow diagrams)
 ```
 
 ---
@@ -83,6 +83,7 @@ After first pass, read core documents as needed:
 | -------------------------------------------------------------- | -------- | -------------------- |
 | [START_HERE.md](../START_HERE.md)                              | Complete | Everyone             |
 | [README.md](../README.md)                                      | Complete | Everyone             |
+| [PHASES.md](../PHASES.md)                                      | Active   | Everyone             |
 | [CONCEPTUAL_OVERVIEW.md](CONCEPTUAL_OVERVIEW.md)               | Complete | Everyone             |
 | [REFERENCE.md](REFERENCE.md)                                   | Complete | Everyone             |
 | [DOCUMENT_MAP.md](DOCUMENT_MAP.md)                             | Complete | Everyone             |
@@ -112,9 +113,13 @@ After first pass, read core documents as needed:
 | Referenced By                 | References                                                                                                                                                                                                                                                                                                                                                                 |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | TECHNICAL_CONCEPT.md          | core/GRAPH.md, core/RPU.md, core/ORCHESTRATION.md, core/MACROS.md, core/REGISTRY.md, core/ENTITIES.md, core/CHANNELS.md, core/RETRIEVAL.md, core/EDGE_ARCHITECTURE.md, core/MULTIMODAL_INTERFACE.md, core/OFFLINE_OPTIMIZATION.md, core/SECURITY.md, core/EVALUATION.md, core/KNOWN_GAPS.md, core/DESIGN_DECISIONS.md, core/THREAT_MODEL.md, core/ARCHITECTURE_DIAGRAMS.md |
-| README.md                     | START_HERE.md, CONCEPTUAL_OVERVIEW.md, REFERENCE.md, TECHNICAL_CONCEPT.md, all core documents                                                                                                                                                                                                                                                                              |
-| START_HERE.md                 | CONCEPTUAL_OVERVIEW.md, README.md, REFERENCE.md, TECHNICAL_CONCEPT.md                                                                                                                                                                                                                                                                                                      |
-| CONCEPTUAL_OVERVIEW.md        | TECHNICAL_CONCEPT.md, core/EVALUATION.md, core/KNOWN_GAPS.md, REFERENCE.md                                                                                                                                                                                                                                                                                                 |
+| README.md                     | START_HERE.md, CONCEPTUAL_OVERVIEW.md, REFERENCE.md, TECHNICAL_CONCEPT.md, PHASES.md, all core documents                                                                                                                                                                                                                                                                   |
+| START_HERE.md                 | CONCEPTUAL_OVERVIEW.md, README.md, REFERENCE.md, TECHNICAL_CONCEPT.md, PHASES.md                                                                                                                                                                                                                                                                                           |
+| PHASES.md                     | TECHNICAL_CONCEPT.md, core/GRAPH.md, core/RPU.md, core/ORCHESTRATION.md, core/MACROS.md, core/REGISTRY.md, core/EDGE_ARCHITECTURE.md, core/MULTIMODAL_INTERFACE.md, core/EVALUATION.md                                                                                                                                                                                     |
+| CONTRIBUTING.md               | core/KNOWN_GAPS.md, core/DESIGN_DECISIONS.md, core/EVALUATION.md, DOCUMENT_MAP.md                                                                                                                                                                                                                                                                                          |
+| REVIEW.md                     | All documents (analysis of full documentation set)                                                                                                                                                                                                                                                                                                                         |
+| DOCUMENT_MAP.md               | All documents (dependency tracking and status)                                                                                                                                                                                                                                                                                                                             |
+| CONCEPTUAL_OVERVIEW.md        | TECHNICAL_CONCEPT.md, core/EVALUATION.md, core/KNOWN_GAPS.md, REFERENCE.md, PHASES.md                                                                                                                                                                                                                                                                                      |
 | core/RPU.md                   | TECHNICAL_CONCEPT.md, core/ORCHESTRATION.md, core/MACROS.md                                                                                                                                                                                                                                                                                                                |
 | core/ORCHESTRATION.md         | TECHNICAL_CONCEPT.md, core/MACROS.md, core/REGISTRY.md                                                                                                                                                                                                                                                                                                                     |
 | core/MACROS.md                | TECHNICAL_CONCEPT.md, core/ORCHESTRATION.md, core/RPU.md, core/SECURITY.md (skill-derived validation)                                                                                                                                                                                                                                                                      |
@@ -124,12 +129,12 @@ After first pass, read core documents as needed:
 | core/RETRIEVAL.md             | TECHNICAL_CONCEPT.md, core/ENTITIES.md, core/CHANNELS.md, core/RPU.md                                                                                                                                                                                                                                                                                                      |
 | core/EDGE_ARCHITECTURE.md     | TECHNICAL_CONCEPT.md                                                                                                                                                                                                                                                                                                                                                       |
 | core/MULTIMODAL_INTERFACE.md  | TECHNICAL_CONCEPT.md                                                                                                                                                                                                                                                                                                                                                       |
+| core/OFFLINE_OPTIMIZATION.md  | TECHNICAL_CONCEPT.md, core/EVALUATION.md                                                                                                                                                                                                                                                                                                                                   |
 | core/SECURITY.md              | TECHNICAL_CONCEPT.md, core/THREAT_MODEL.md                                                                                                                                                                                                                                                                                                                                 |
-| core/THREAT_MODEL.md          | core/SECURITY.md, TECHNICAL_CONCEPT.md                                                                                                                                                                                                                                                                                                                                     |
+| core/THREAT_MODEL.md          | core/SECURITY.md, TECHNICAL_CONCEPT.md, core/GRAPH.md (trust hierarchy reference)                                                                                                                                                                                                                                                                                          |
 | core/EVALUATION.md            | TECHNICAL_CONCEPT.md, core/KNOWN_GAPS.md                                                                                                                                                                                                                                                                                                                                   |
 | core/KNOWN_GAPS.md            | TECHNICAL_CONCEPT.md, core/EVALUATION.md, core/DESIGN_DECISIONS.md                                                                                                                                                                                                                                                                                                         |
 | core/DESIGN_DECISIONS.md      | TECHNICAL_CONCEPT.md, core/KNOWN_GAPS.md                                                                                                                                                                                                                                                                                                                                   |
-| core/GRAPH.md                 | TECHNICAL_CONCEPT.md                                                                                                                                                                                                                                                                                                                                                       |
-| core/OFFLINE_OPTIMIZATION.md  | TECHNICAL_CONCEPT.md                                                                                                                                                                                                                                                                                                                                                       |
-| core/ARCHITECTURE_DIAGRAMS.md | TECHNICAL_CONCEPT.md, core/GRAPH.md                                                                                                                                                                                                                                                                                                                                        |
+| core/GRAPH.md                 | TECHNICAL_CONCEPT.md, core/ARCHITECTURE_DIAGRAMS.md                                                                                                                                                                                                                                                                                                                        |
+| core/ARCHITECTURE_DIAGRAMS.md | TECHNICAL_CONCEPT.md, core/GRAPH.md, core/ENTITIES.md, core/EDGE_ARCHITECTURE.md                                                                                                                                                                                                                                                                                           |
 | REFERENCE.md                  | All documents (terminology reference)                                                                                                                                                                                                                                                                                                                                      |

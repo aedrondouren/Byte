@@ -120,7 +120,7 @@ The complete entity view at runtime combines the definition from the Entity Grap
 
 Entity definitions support identity merging as a DAG operation: two entity definitions from different channels can be merged into a single successor definition, preserving both as ancestors. This fits the artifact store's DAG model natively — the merged entity is a new version with two parents.
 
-**Known vs. Unknown Entities.** An entity becomes "known" once it has an entry in the Entity Graph — regardless of trust level. A known entity carries accumulated identity identifiers (from multiple channels), relationship history, and associated knowledge/memories in the world-state graphs. If a known entity is demoted (e.g., from `trusted_user` back to `untrusted`), the entity definition remains in the Entity Graph with reduced permissions, but all accumulated identity, relationship context, and historical knowledge persists. The system retains understanding of who this entity is even without runtime access. An "unknown" entity is one with no Entity Graph entry — a raw channel identifier that has not yet been promoted to an entity definition.
+**Known vs. Unknown Entities.** An entity becomes "known" once it has an entry in the Entity Graph. Known entities persist through demotion, preserving accumulated identity and relationship context. An "unknown" entity is a raw channel identifier with no Entity Graph entry. → See [ENTITIES.md](ENTITIES.md#entity-store-strategy) for the full treatment.
 
 Entity definition lifecycle states: `discovered` → `pending_review` → `active` → `suspended` → `merged` → `revoked`. State transitions are recorded as events in the execution graph.
 
@@ -147,39 +147,12 @@ Control signal authority requires explicit enablement (default: disabled).
 
 ### Trust Hierarchy
 
-```text
-┌─────────────────────────────────────────────────────────┐
-│ UNTRUSTED                                               │
-│  ┌───────────────┐  ┌───────────────┐  ┌─────────────┐  │
-│  │ LLM Provider  │  │ External APIs │  │ Unapproved  │  │
-│  │               │  │               │  │ Channels    │  │
-│  └───────┬───────┘  └───────┬───────┘  └──────┬──────┘  │
-├──────────┼──────────────────┼─────────────────┼─────────┤
-│ PENDING  │                  │                 │         │
-│  ┌───────┴──────────────────┴─────────────────┴──────┐  │
-│  │ Pending Channels (awaiting Admin approval)        │  │
-│  │ ↓ no event processing, no graph access            │  │
-├──┼───────────────────────────────────────────────────┼──┤
-│  │ SEMI-TRUSTED                                      │  │
-│  │  ┌─────────────────────────────────────────────┐  │  │
-│  │  │ Sub-Users (elevated external entities)      │  │  │
-│  │  │ ↓ domain-restricted, privacy-capped         │  │  │
-│  │  │ Edge Node (PEN)                             │  │  │
-│  │  │ ↓ structured events only                    │  │  │
-│  │  └─────────────────────────────────────────────┘  │  │
-├──┼───────────────────────────────────────────────────┼──┤
-│  │ TRUSTED                                           │  │
-│  │  ┌─────────────────────────────────────────────┐  │  │
-│  │  │ Admin (primary webUI + merged identities)   │  │  │
-│  │  │ ↓ full access, all domains, all privacy     │  │  │
-│  │  │ Homelab (Trusted Core)                      │  │  │
-│  │  │ ↓ Event Store + Kernel + Memory + Knowledge │  │  │
-│  │  └─────────────────────────────────────────────┘  │  │
-└──┴───────────────────────────────────────────────────┴──┘
-````
+- **UNTRUSTED:** LLM Provider (normalized requests only), External APIs (filtered views only), Unapproved Channels (no processing)
+- **PENDING:** Pending Channels awaiting Admin approval — no event processing, no graph access
+- **SEMI-TRUSTED:** Sub-Users (domain-restricted, privacy-capped), Edge Node / PEN (structured events only)
+- **TRUSTED:** Admin (primary webUI + merged identities — full access, all domains, all privacy), Homelab / Trusted Core (Event Store + Kernel + Memory + Knowledge)
 
-Trust flows: Admin approves channels -> channels bind to entities ->
-entities have permissions -> permissions filter retrieval.
+Trust flows: Admin approves channels → channels bind to entities → entities have permissions → permissions filter retrieval.
 
 ### The graph is a DAG
 
@@ -329,3 +302,4 @@ Keep this statement in mind while reviewing future revisions. If a new subsystem
 
 - If a transformation doesn't produce durable runtime knowledge, it's a channel, not a projection.
 - If a channel tries to produce runtime state, it should emit events instead.
+````

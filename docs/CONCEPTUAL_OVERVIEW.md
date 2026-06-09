@@ -66,9 +66,9 @@ This separation means:
 - **The system is safe** — the AI cannot execute arbitrary actions.
 - **The system is efficient** — the AI is only called when genuine reasoning is needed.
 
-### The Seven Knowledge Domains
+### The Eight Knowledge Domains
 
-The system organizes what it knows into seven domains, stored across two data models:
+The system organizes what it knows into eight domains, stored across two data models:
 
 | Domain            | What It Stores                   | Example                                             | Store          |
 | ----------------- | -------------------------------- | --------------------------------------------------- | -------------- |
@@ -76,13 +76,34 @@ The system organizes what it knows into seven domains, stored across two data mo
 | **Execution**     | What the system has done         | "Fetched weather forecast, sent to user"            | Event store    |
 | **Memory**        | What the system has experienced  | "User asked for weather every morning this week"    | Event store    |
 | **Knowledge**     | What the system knows to be true | "User prefers morning weather briefings for Boston" | Event store    |
-| **Skills**        | Pre-authored behavior templates  | Installed skill: morning briefing (from community)  | Artifact store |
 | **Macros**        | Patterns that repeat             | Compiled routine: morning briefing workflow         | Artifact store |
+| **Skills**        | Pre-authored behavior templates  | Installed skill: morning briefing (from community)  | Artifact store |
 | **Code Registry** | Tested code components           | Validated function: format weather data             | Artifact store |
+| **Entity Graph**  | Who participates in the system   | Admin, family members, guests, internal assistants  | Artifact store |
 
-Four domains (perception, execution, memory, knowledge) are derived from the system's lived experience as an append-only event stream. Three domains (macros, skills, code registry) are versioned artifacts — entities the system creates, manages, and evolves over time.
+Four domains (perception, execution, memory, knowledge) are derived from the system's lived experience as an append-only event stream. Four domains (macros, skills, code registry, entity graph) are versioned artifacts — entities the system creates, manages, and evolves over time.
 
 Skills are an optional seed — behaviors the user may install to accelerate early competence. The system works without skills, discovering patterns organically. As skills execute (when installed), the system learns from the execution traces and compiles personalized, optimized versions (macros) that carry provenance links back to the original skill.
+
+### Entities and Permissions
+
+Every participant in the system — you, family members, guests, even the system's own internal assistants — is represented as an **entity**. Entities are not memory containers; all memory lives in the shared graph. Instead, entities define **who has access to what**.
+
+The system uses a hierarchical trust model:
+
+- **Admin** — the system owner. Exists from the start, cannot be superseded. Full access to everything.
+- **Admin Delegate** — trusted managers. Can manage channels and permissions but cannot override the Admin.
+- **Trusted User** — expanded access to specific domains and tools.
+- **Sub-User** — limited, specific permissions granted by a higher-trust entity.
+- **Untrusted** — the default for all new entities. No access to anything until explicitly granted.
+
+Trust is never automatic. No entity becomes trusted through behavior alone — it must be explicitly granted by a higher-trust entity. The Admin ceiling is irrevocable: no delegation chain can produce permissions equal to or greater than Admin.
+
+### Channels
+
+You interact with the system through **channels** — surfaces like a web interface, Discord, voice, or API. Every channel is bidirectional: it sends events into the system and receives projected views from it.
+
+All channels must be approved by the Admin before they can process any events. Channels are not control channels by default — even the Admin's own channels must be explicitly enabled to send system control signals (pause, resume, terminate). This provides a safety layer: if an Admin session is compromised on a secondary channel, the attacker cannot send kernel control signals.
 
 ### The Learning Pipeline
 
@@ -90,11 +111,11 @@ The system learns through a multi-stage pipeline:
 
 1. **Perception** — raw sensor data becomes structured observations (object detection, speech-to-text, etc.)
 2. **Situation Model** — observations are combined into understanding ("user is in a focused work session")
-3. **Intent** — understanding becomes action ("offer assistance")
-4. **Execution** — actions are carried out
-5. **Memory** — outcomes are summarized into narrative memories
-6. **Knowledge** — repeated patterns are validated into facts
-7. **Macros** — frequently-used workflows are compiled into efficient routines
+3. **Intent** — understanding becomes action ("offer assistance"), including proactive suggestions from learned temporal patterns
+4. **Execution** — actions are carried out by the kernel using deterministic primitives
+5. **Summarization** — outcomes are compressed into narrative memories, then validated into knowledge facts
+6. **Macros** — frequently-used workflows are compiled into efficient deterministic routines
+7. **Temporal Intent** — recurring patterns from knowledge become scheduled automations (with your approval)
 
 Each stage compresses the previous one. Raw sensor data (gigabytes per hour) becomes structured perception (kilobytes per hour), which becomes situation models (bytes per event), which becomes memories (one sentence per experience), which becomes knowledge (one fact per pattern).
 
@@ -113,6 +134,7 @@ You interact with the system through natural means — voice, gestures, gaze, or
 - **It improves over time.** The more you use it, the less it needs to "think" to give you good answers.
 - **It is transparent.** You can always ask: why did you do that? What do you know? How confident are you?
 - **It works offline.** The edge device handles immediate responses locally. The homelab handles deep reasoning.
+- **It respects boundaries.** Knowledge learned in one context doesn't leak into another. Facts propagate; relationship context stays private.
 
 ### As a Developer
 
@@ -139,6 +161,8 @@ The system stores information about your preferences, habits, environment, and i
 
 **AI models don't see your raw data.** Cloud AI providers receive only normalized inference requests — structured context and task definitions, not your personal information.
 
+**Knowledge is dual-access.** Factual content (e.g., "event sourcing is useful") can propagate globally to anyone with domain permissions. But contextual metadata (who taught this, under what relationship) stays scoped to the originating relationship. This prevents accidental leakage of sensitive relationship information while allowing useful facts to spread.
+
 ---
 
 ## How It's Different
@@ -152,21 +176,15 @@ The system stores information about your preferences, habits, environment, and i
 | **Cost**         | Every interaction requires full inference | Every interaction requires full inference | Cost decreases over time as structure accumulates   |
 | **Reliability**  | Model-dependent                           | Model-dependent                           | Kernel is permanent; model is replaceable           |
 | **Privacy**      | Data sent to provider                     | Data sent to provider                     | Raw data stays on your device                       |
+| **Permissions**  | No access control                         | Ad-hoc or none                            | Hierarchical trust with Admin ceiling invariant     |
 
 ---
 
 ## What's Real vs. What's Planned
 
-This project is in the **design phase**. Nothing has been implemented yet. Here is the current status:
+This project is in the **design phase**. Nothing has been implemented yet.
 
-| Phase | What It Adds                             | Status                                 |
-| ----- | ---------------------------------------- | -------------------------------------- |
-| **1** | Core kernel and execution system         | Design complete                        |
-| **2** | AI reasoning coprocessor + orchestration | Design complete                        |
-| **3** | Sensor-to-action pipeline                | Design complete                        |
-| **4** | Memory, knowledge, and skill registry    | Design complete                        |
-| **5** | Macros + code registry                   | Research phase — optimization layer    |
-| **6** | Wearable edge device + multimodal input  | Conceptual — hardware not yet designed |
+See [PHASES.md](../PHASES.md) for the full build phases table, dependencies, and current status.
 
 Phases 1–4 are the core system. Phase 4 (memory + knowledge) is the falsification point for the core thesis. Skills are available from Phase 4 as a harness completeness feature but are not part of the thesis test. Phase 5 adds the optimization layer: compiling skill execution traces and general patterns into deterministic macros. Phases 5–6 are experimental extensions built on that foundation.
 
@@ -175,6 +193,6 @@ Phases 1–4 are the core system. Phase 4 (memory + knowledge) is the falsificat
 ## Next Steps
 
 - **To explore the technical architecture:** [TECHNICAL_CONCEPT.md](TECHNICAL_CONCEPT.md#3-architecture-overview)
-- **To understand the research evaluation:** [core/EVALUATION.md](core/EVALUATION.md#primary-metric-reasoning-cost-per-task)
+- **To understand the research evaluation:** [core/EVALUATION.md](core/EVALUATION.md#primary-metric-reasoning-cost-token-count-per-task)
 - **To see what problems remain unsolved:** [core/KNOWN_GAPS.md](core/KNOWN_GAPS.md#macro-discovery-section-91)
 - **To look up any term:** [REFERENCE.md](REFERENCE.md)

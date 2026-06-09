@@ -39,7 +39,7 @@ In plain terms: Can a system get better by _organizing what it has learned_ rath
 
 ### I want to evaluate the research
 
-**Start here →** [docs/core/EVALUATION.md](docs/core/EVALUATION.md#primary-metric-reasoning-cost-per-task) → [docs/core/KNOWN_GAPS.md](docs/core/KNOWN_GAPS.md#macro-discovery-section-91)
+**Start here →** [docs/core/EVALUATION.md](docs/core/EVALUATION.md#primary-metric-reasoning-cost-token-count-per-task) → [docs/core/KNOWN_GAPS.md](docs/core/KNOWN_GAPS.md#macro-discovery-section-91)
 
 - Falsifiable thesis and evaluation methodology
 - External baseline comparisons
@@ -51,29 +51,12 @@ In plain terms: Can a system get better by _organizing what it has learned_ rath
 
 ## System at a Glance
 
-```
-   ┌─────────────┐
-   │     You     │
-   └──────┬──────┘
-          │   voice, gaze, gestures
-          ▼
-   ┌─────────────┐
-   │  Edge Node  │   ← wearable device (glasses, earbuds, etc.)
-   │   (fast)    │     processes sensors locally, runs immediate responses
-   └──────┬──────┘
-          │   structured events only (no raw audio/video)
-          ▼
-   ┌─────────────┐
-   │   Homelab   │   ← your home server
-   │   (deep)    │     long-term memory, heavy reasoning, planning
-   └──────┬──────┘
-          │   normalized requests only
-          ▼
-   ┌─────────────┐
-   │  AI Models  │   ← cloud or local LLMs
-   │  (optional) │     used as reasoning coprocessors, not the control system
-   └─────────────┘
-```
+You → Edge Node (perception, local inference) → Homelab (memory, reasoning, planning) → AI Models (RPU, normalized requests only)
+
+- **You** interact through voice, gaze, gestures
+- **Edge Node** is a wearable device (glasses, earbuds, etc.) — processes sensors locally, runs immediate responses
+- **Homelab** is your home server — long-term memory, heavy reasoning, planning
+- **AI Models** are cloud or local LLMs — used as reasoning coprocessors, not the control system
 
 **Key principle:** Your raw data (audio, video, biometrics) never leaves your edge device. Only structured, compressed events flow to the homelab. AI models receive only normalized requests — they never control the system.
 
@@ -117,13 +100,6 @@ In plain terms: Can a system get better by _organizing what it has learned_ rath
 
 This project is in the **design phase**. Implementation has not yet begun.
 
-| Phase | Component                           | Status          |
-| ----- | ----------------------------------- | --------------- |
-| 1     | Kernel + Execution Graph            | Design complete |
-| 2     | RPU + Orchestration                 | Design complete |
-| 3     | Signal-to-Intent Pipeline           | Design complete |
-| 4     | Memory + Knowledge + Skill Registry | Design complete |
-| 5     | Macros + Code Registry              | Research phase  |
-| 6     | Edge + Multimodal                   | Conceptual      |
+See [PHASES.md](PHASES.md) for the full build phases table, dependencies, and current status.
 
 Phases 1–4 test the core thesis. Phases 5–6 are experimental extensions.

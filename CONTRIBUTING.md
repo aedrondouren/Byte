@@ -22,6 +22,7 @@ Documentation changes only:
 
 ## Where to Start
 
+- [PHASES.md](PHASES.md) — understand the build roadmap and phase dependencies
 - [KNOWN_GAPS.md](docs/core/KNOWN_GAPS.md) — the most open-ended areas
 - [DESIGN_DECISIONS.md](docs/core/DESIGN_DECISIONS.md) — rationale you can challenge
 - [EVALUATION.md](docs/core/EVALUATION.md) — methodology you can refine

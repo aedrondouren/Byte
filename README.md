@@ -46,7 +46,7 @@ The thesis is tested across four phases. If Phase 4 (Memory + Knowledge) does no
 
 ## Build Phases
 
-See [START_HERE.md](START_HERE.md#current-status) for the full build phases table and current status.
+See [PHASES.md](PHASES.md) for the full build phases table, dependencies, and current status.
 
 Phases 1–4 test the core thesis. Phases 5–6 are experimental extensions.
 

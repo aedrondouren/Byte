@@ -24,39 +24,13 @@ The system does not observe the world. It continuously extends its world-state g
 
 ## Hardware Topology
 
-```
-  ┌───────────────────────────────────────────────────┐
-  │              Homelab (Trusted Core)               │
-  │  ┌───────────┐  ┌───────────┐  ┌───────────────┐  │
-  │  │ Cognitive │  │ Long-term │  │ Code Registry │  │
-  │  │ Core      │  │ Memory    │  │               │  │
-  │  └─────┬─────┘  └─────┬─────┘  └───────┬───────┘  │
-  │        └──────────────┴─┬──────────────┘          │
-  │                     VPN Tunnel                    │
-  └─────────────────────────┼─────────────────────────┘
-                            │
-                    ┌───────┼───────┐
-                   LTE     WiFi  Ethernet
-                    └───────┼───────┘
-                            │
-┌───────────────────────────┴───────────────────────────┐
-│           Portable Personal Edge Node (PEN)           │
-│  ┌─────────────────────────────────────────────────┐  │
-│  │           Compute Core (backpack/bag)           │  │
-│  │  ┌─────────────┐  ┌───────────┐  ┌───────────┐  │  │
-│  │  │ Perception  │  │ Local     │  │ Network   │  │  │
-│  │  │ Processing  │  │ Inference │  │ Orchest.  │  │  │
-│  │  └──────┬──────┘  └─────┬─────┘  └─────┬─────┘  │  │
-│  │         └──────────────┬┴──────────────┘        │  │
-│  └────────────────────────┼────────────────────────┘  │
-│            ┌──────────────┼──────────────┐            │
-│            │              │              │            │
-│      ┌─────┴─────┐  ┌─────┴─────┐  ┌─────┴─────┐      │
-│      │ Glasses   │  │ Phone     │  │ Biometric │      │
-│      │ (camera)  │  │ (compute) │  │ (EEG/EMG) │      │
-│      └───────────┘  └───────────┘  └───────────┘      │
-└───────────────────────────────────────────────────────┘
-```
+The PEN architecture has three layers connected via VPN tunnel:
+
+- **Homelab (Trusted Core):** Cognitive Core, Long-term Memory, Code Registry
+- **Network:** Multi-WAN aggregation across LTE, WiFi, and Ethernet. VPN tunnel to homelab is the primary trusted egress.
+- **Portable Personal Edge Node (PEN):**
+  - Compute Core (backpack/bag): Perception Processing, Local Inference, Network Orchestration
+  - Sensor Devices: Glasses (camera), Phone (compute), Biometric sensors (EEG/EMG)
 
 ## Edge Perception Layer
 

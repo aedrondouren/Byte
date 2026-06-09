@@ -5,91 +5,32 @@
 > **Prerequisites:** TECHNICAL_CONCEPT.md Sections 1–18
 > **Status:** Complete
 
-## Full Transformation Flow
+This document contains the simple flow diagrams used across the architecture. Complex visual diagrams have been replaced with prose descriptions and references to authoritative locations.
 
-```
-Skills (optional, pre-authored, versioned, executed via RPU)
-    ↓
-Raw Signals → Perception Processing → Perception
-    ↓
-Entity Discovery → Entity Graph (versioned definitions, artifact store)
-    ↓
-Situation Model Generation → Situation Model
-    ↓
-Intent Estimation → Intent
-    ↓
-Projection → Execution Graph
-    ↓                                    ↗
-Projection → Memory Graph               │ (skill execution traces, if skills installed)
-    ↓                                   │
-Projection → Knowledge Graph ←──────────┘
-    │                    ↗
-    ├── Temporal Patterns → Temporal Intent → Intent (feedback loop)
-    │
-    └── Channel → External Surface (Web, Discord, CLI, API, etc.)
+---
 
-┌──────────────────────────────────────────────────────────┐
-│ World-State Event Store (append-only, content-addressed) │
-│ Perception Graph → Execution Graph → Memory Graph        │
-│ → Knowledge Graph                                        │
-└──────────────────────┬───────────────────────────────────┘
-                       │ content hash → artifact ID+version
-┌──────────────────────▼───────────────────────────────────┐
-│ Artifact Version Store (content-addressed, versioned)    │
-│ Macro Graph (skill-derived + pattern-derived)            │
-│ Skill Registry                                           │
-│ Code Registry                                            │
-│ Entity Graph (identity, trust, permissions, relationships)│
-└──────────────────────────────────────────────────────────┘
-```
+## System Architecture (Prose)
 
-## Two-Store Architecture
+The system has two stores connected to a cognitive kernel:
 
-```
-┌─────────────────────────────────────────┐
-│        World-State Event Store          │
-│ Append-only, content-addressed events   │
-│ State = projection of event history     │
-│                                         │
-│ Perception Graph  ── what happened      │
-│ Execution Graph   ── what was done      │
-│ Memory Graph      ── what was felt      │
-│ Knowledge Graph   ── what is known      │
-│                                         │
-│ Queries: temporal, causal, semantic     │
-│ Retention: time-window based, archival  │
-└──────────────────┬──────────────────────┘
-                   │ content hash → artifact ID+version
-┌──────────────────▼──────────────────────┐
-│        Artifact Version Store           │
-│ Content-addressed, semantically         │
-│ versioned, lifecycle-managed            │
-│ State = latest version per artifact     │
-│                                         │
-│ Macro Graph     ── compiled patterns    │
-│ Skill Registry  ── authored behaviors   │
-│ Code Registry   ── tested components    │
-│ Entity Graph    ── identity & perms     │
-│                                         │
-│ Queries: identity, version, capability  │
-│ Retention: reference-based, no archival │
-└─────────────────────────────────────────┘
-```
+- **World-State Event Store** — append-only, content-addressed events. Contains Perception Graph (what happened), Execution Graph (what was done), Memory Graph (what was experienced), Knowledge Graph (what is known). State is derived by projecting event history. Queries are temporal, causal, and semantic. Retention is time-window based with archival to cold storage.
+- **Artifact Version Store** — content-addressed, semantically versioned, lifecycle-managed. Contains Macro Graph (compiled patterns), Skill Registry (authored behaviors), Code Registry (tested components), Entity Graph (identity and permissions). State is the latest version per artifact. Queries are identity, version, and capability based. Retention is reference-based — artifacts are kept as long as anything points to them.
 
-## Entity Graph Position
+Cross-store references use content hashes in events pointing to artifact ID+version. No unified index is needed.
 
-```
-World-State Event Store  ◄──►  Artifact Version Store
-    │                               │
-    │    ┌─ Perception Graph        │    ┌─ Macro Graph
-    │    ├─ Execution Graph         │    ├─ Skill Registry
-    │    ├─ Memory Graph            │    ├─ Code Registry
-    │    └─ Knowledge Graph         │    └─ Entity Graph  ← identity, trust, permissions
-    │                               │
-    └───────────┬───────────────────┘
-                │
-        Cognitive Kernel
-```
+For the full two-store specification, see [TECHNICAL_CONCEPT.md Section 1.6](../TECHNICAL_CONCEPT.md#16-implementation-note-two-stores-eight-graphs). For query complexity analysis, see [GRAPH.md](GRAPH.md#query-complexity-and-cross-graph-resolution).
+
+---
+
+## Entity Graph Position (Prose)
+
+The Entity Graph is the fourth artifact graph in the Artifact Version Store, alongside the Macro Graph, Skill Registry, and Code Registry. It stores versioned entity definitions — identity, trust level, permissions, and relationships — as content-addressed, lifecycle-managed artifacts. Entity state (last seen, interaction count, derived preferences) is a projection over the world-state event stream, not stored as an artifact.
+
+The Cognitive Kernel reads from both stores, invokes the RPU for reasoning, and executes through semantic orchestration primitives.
+
+For the full entity model, see [ENTITIES.md](ENTITIES.md).
+
+---
 
 ## Entity Definition Lifecycle (DAG)
 
@@ -125,106 +66,61 @@ Unknown Identifier (raw channel ID, no Entity Graph entry)
                     └── provenance: { demoted_by: admin, from_version: v4 }
 ```
 
-## Entity/Session Composition (Runtime)
+---
+
+## Entity/Session Composition (Prose)
+
+At runtime, the complete entity context is composed from three sources:
 
 ```
-┌─────────────────────────────┐
-│  Entity Graph               │
-│  (Artifact Version Store)   │
-│                             │
-│  Entity Def: entity_abc:v3  │
-│  ├── trust: trusted_user    │
-│  ├── identity: {...}        │
-│  ├── permissions: {...}     │
-│  └── relationships: [...]   │
-└──────────┬──────────────────┘
-           │ loaded by hash
-           ▼
-┌─────────────────────────────┐     ┌─────────────────────────────┐
-│  World-State Event Store    │     │  Channel Definition         │
-│                             │     │                             │
-│  Events where entity was    │     │  entity_bindings:           │
-│  subject/participant        │     │  - entity_def: entity_abc   │
-│                             │     │    session_id: discord:@bob │
-│  Projected State:           │     │    role: trusted_user       │
-│  - last_seen                │     └──────────┬──────────────────┘
-│  - interaction_count        │                │
-│  - derived_preferences      │                │
-└──────────┬──────────────────┘                │
-           │ projected                         │
-           ▼                                   ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Complete Entity/Session Context                │
-│                                                             │
-│  entity: entity_abc:v3                                      │
-│  state: { last_seen: ..., interaction_count: 147, ... }     │
-│  session: { channel: "discord", session_id: "@bob", ... }   │
-│  effective_permissions: { entity_perms ∩ channel_perms }    │
-└─────────────────────────────────────────────────────────────┘
-           │
-           ▼
-    ContextProjection → RPU / Execution
+Entity Definition (Entity Graph, artifact store)
+    +
+Entity State (projection from event stream)
+    +
+Channel Binding (entity_bindings in Channel definition)
+    =
+Complete Entity/Session Context (runtime)
 ```
 
-## Entity Demotion Preserves Knowledge
+The Entity Definition provides identity, trust level, permissions, and relationships. Entity State provides last seen, interaction count, and derived preferences. Channel Binding provides the session context — which channel, session ID, and role. Effective permissions are the intersection of entity permissions and channel permissions.
+
+For the full composition model with examples, see [ENTITIES.md Entity/Session Composition](ENTITIES.md#entitysession-composition).
+
+---
+
+## Entity Demotion Preserves Knowledge (Prose)
+
+When an entity is demoted:
+
+- **Entity Definition** — trust level and permissions are reduced, but identity and relationships are preserved. The system retains understanding of who this entity is.
+- **Entity State** — unchanged. All historical data persists (last seen, interaction count, preferences).
+- **World-State Graphs** — unchanged. Memories, knowledge entries, and relationships persist.
+
+Result: the system knows WHO this entity is, but grants NO runtime access. If re-elevated, all context is immediately available.
+
+For the full demotion model with before/after examples, see [ENTITIES.md Demotion and Session Composition](ENTITIES.md#demotion-and-session-composition).
+
+---
+
+## Unified System Model (Prose)
+
+The system layers from bottom to top:
 
 ```
-Before Demotion:                              After Demotion:
-┌──────────────────────────┐                  ┌──────────────────────────┐
-│ Entity Def v3            │                  │ Entity Def v4 (demoted)  │
-│ trust: trusted_user      │                  │ trust: untrusted         │
-│ permissions: { read }    │     ──demote──▶  │ permissions: { none }    │
-│ identity: { discord:@bob │                  │ identity: { discord:@bob │
-│           voice_print }  │                  │           voice_print }  │
-└──────────┬───────────────┘                  └──────────┬───────────────┘
-           │                                            │
-           ▼                                            ▼
-┌──────────────────────────┐                  ┌──────────────────────────┐
-│ Entity State (projected) │                  │ Entity State (projected) │
-│ last_seen: ...           │     unchanged    │ last_seen: ...           │
-│ interactions: 147        │     ◀─────────▶  │ interactions: 147        │
-│ preferences: {...}       │                  │ preferences: {...}       │
-└──────────┬───────────────┘                  └──────────┬───────────────┘
-           │                                            │
-           ▼                                            ▼
-┌──────────────────────────┐                  ┌──────────────────────────┐
-│ World-State Graphs       │                  │ World-State Graphs       │
-│ Memories: 47 entries     │     unchanged    │ Memories: 47 entries     │
-│ Knowledge: 12 entries    │     ◀─────────▶  │ Knowledge: 12 entries    │
-│ Relationships: 5         │                  │ Relationships: 5         │
-└──────────────────────────┘                  └──────────────────────────┘
-
-Result: System knows WHO this entity is, but grants NO runtime access.
-        If re-elevated, all context is immediately available.
+World-State Event Store ◄──► Artifact Version Store
+    │
+    └── Cognitive Kernel
+         ├── RPU (reasoning)
+         ├── Semantic Orchestration (Tool / App Services)
+         ├── Macro Optimization (discovery, validation, audit)
+         └── Channels (Web, Discord, CLI, API)
 ```
 
-## Unified System Model
+The stores hold all system state. The kernel governs execution. The RPU provides structured reasoning. Semantic orchestration provides deterministic tool composition. The optimization layer compresses experience into reusable structure. Channels expose projected state to external surfaces.
 
-```
-World-State Event Store  ◄──►  Artifact Version Store
-    │                               │
-    │    ┌─ Perception Graph        │    ┌─ Macro Graph
-    │    ├─ Execution Graph         │    ├─ Skill Registry
-    │    ├─ Memory Graph            │    ├─ Code Registry
-    │    └─ Knowledge Graph         │    └─ Entity Graph
-    │                               │
-    └───────────┬───────────────────┘
-                │
-        Cognitive Kernel
-                │
-        ┌───────┴───────┐
-        │               │
-      RPU         Semantic Orchestration
-    (reasoning)    (Tool / App Services)
-        │               │
-        └───────┬───────┘
-                │
-        Macro Optimization
-    (discovery, validation, audit)
-                │
-           Channels
-    (Web, Discord, CLI, API)
-```
+Edge nodes run perception processing and local inference, sending only structured events to the homelab. AI models are accessed through the LLM Runtime adapter and are not part of the core architecture.
+
+---
 
 ## Intent Pipeline (Three-Stage Flow)
 
@@ -238,6 +134,8 @@ Commit (authorized to execute)
 Execution Chain
 ```
 
+---
+
 ## Summarization Pipeline
 
 ```
@@ -247,6 +145,8 @@ Narrative Memories (compressed, contextual)
     ↓
 Validated Knowledge (facts, patterns, schedules)
 ```
+
+---
 
 ## Macro Lifecycle
 
@@ -267,6 +167,8 @@ Execution (with Reasoning Hints, captured plan artifact if present)
     ↓
 Demotion (if usage decays, primitives change, source skill updates, or child demoted)
 ```
+
+---
 
 ## Macro Captured Content Spectrum
 
@@ -301,6 +203,8 @@ Level 3: Tool Calls + Reasoning Hints + Plan Artifact
 
 The macro does not mandate what is captured. It compiles the detected pattern as-is.
 
+---
+
 ## Skill → Macro → Knowledge Provenance Chain
 
 ```
@@ -323,6 +227,8 @@ Knowledge confidence decays (accelerated)
 New macro proposed from v1.1 traces → validated → promoted
 ```
 
+---
+
 ## Hierarchical Macro Composition
 
 ```
@@ -342,6 +248,8 @@ No runtime call stack — just sequential/parallel event execution.
 Always expandable: "expand all" reveals full tool-call chain.
 ```
 
+---
+
 ## Cognitive Cache Hierarchy
 
 ```
@@ -352,24 +260,15 @@ L4 — Event History
 L5 — Reasoning (RPU)     (slowest, most expensive to invoke)
 ```
 
-## Edge-Cloud Separation
+---
 
-```
-      Edge Node                                 Homelab
-┌────────────────────┐                 ┌───────────────────────┐
-│ Perception         │   structured    │ Stores + Kernel + RPU │
-│ Processing         │─────events─────▶│ + Orchestration       │
-│ Local Inference    │◀───requests─────│ + Optimization        │
-│ Immediate Response │                 │ + Channels            │
-└────────────────────┘                 └──────────┬────────────┘
-                                                  │ normalized
-                                                  │ requests
-                                                  ▼
-                                          ┌──────────────┐
-                                          │  AI Models   │
-                                          │ (LLM Runtime)│
-                                          └──────────────┘
-```
+## Edge-Cloud Separation (Prose)
+
+- **Edge Node:** Runs Perception Processing, Local Inference, and Immediate Response. Sends structured events to the homelab. Receives requests back.
+- **Homelab:** Runs Stores, Kernel, RPU, Orchestration, Optimization, and Channels. Receives structured events from edge nodes. Sends normalized requests to AI Models.
+- **AI Models (LLM Runtime):** Receives normalized requests only. Not part of the core architecture.
+
+For the full edge specification, see [EDGE_ARCHITECTURE.md](EDGE_ARCHITECTURE.md). For the edge-cloud separation in TECHNICAL_CONCEPT.md, see [Section 12 Edge Architecture](../TECHNICAL_CONCEPT.md#12-edge-architecture).
 
 ---
 

@@ -26,8 +26,8 @@
 
 **Mitigations:**
 
-- VPN tunnel for all edge-homelab communication (SECURITY.md Section 15.3).
-- Mutual authentication between nodes (SECURITY.md Section 15.4).
+- VPN tunnel for all edge-homelab communication ([SECURITY.md: Network Security](SECURITY.md#network-security)).
+- Mutual authentication between nodes ([SECURITY.md: Trust Boundaries Between Nodes](SECURITY.md#trust-boundaries-between-nodes)).
 - Event cryptographic hashes detect modification. Modified events fail hash verification.
 - Heartbeat monitoring detects communication anomalies.
 
@@ -41,10 +41,10 @@
 
 **Mitigations:**
 
-- Raw biometric data is never stored (SECURITY.md Section 15.2).
+- Raw biometric data is never stored ([SECURITY.md: Biometric Data Handling](SECURITY.md#biometric-data-handling)).
 - Local storage is encrypted at rest.
 - Tamper-evident event hashes detect modification of stored events.
-- Graceful degradation limits damage from compromised local models (SECURITY.md Section 15.6).
+- Graceful degradation limits damage from compromised local models ([SECURITY.md: Graceful Degradation and Offline Safety](SECURITY.md#graceful-degradation-and-offline-safety)).
 - The PEN is semi-trusted; the homelab validates all incoming events.
 
 **Residual risk:** Medium. Physical access is a strong attack vector. Encryption and tamper-evidence reduce but do not eliminate risk.
@@ -73,7 +73,7 @@
 
 **Mitigations:**
 
-- All channel input is treated as intent proposals, not commands. The kernel validates and schedules execution regardless of source (SECURITY.md Section 15.9).
+- All channel input is treated as intent proposals, not commands. The kernel validates and schedules execution regardless of source ([SECURITY.md: Channel Security](SECURITY.md#channel-security)).
 - Input validation ensures all data passed to the RPU is structured and schema-validated (MULTIMODAL_INTERFACE.md: Orchestration Harness).
 - Channels on untrusted surfaces never receive raw world-state data, only projected and filtered views.
 - The RPU receives structured context, not raw user input. User input is processed through the signal-to-intent pipeline before reaching the RPU.
@@ -89,7 +89,7 @@
 **Mitigations:**
 
 - Code components are stored in the artifact version store with mandatory test pipeline validation before adoption (TECHNICAL_CONCEPT.md Section 9.2.2).
-- Components are content-addressed and immutable once published (SECURITY.md Section 15.8).
+- Components are content-addressed and immutable once published ([SECURITY.md: Code Registry Integrity](SECURITY.md#code-registry-integrity)).
 - Edge nodes verify component integrity through cryptographic hashes before use.
 - Cross-store references link component versions to their test runs in the world-state event store, providing full auditability.
 - Deprecation policy allows rapid removal of compromised components (REGISTRY.md: Component Deprecation Policy).
@@ -135,7 +135,7 @@
 
 **Mitigations:**
 
-- All macros pass validation tests before activation (SECURITY.md Section 15.7).
+- All macros pass validation tests before activation ([SECURITY.md: Macro Validation and Reversibility](SECURITY.md#macro-validation-and-reversibility)).
 - Macros are fully reversible — they can be decomposed into constituent primitives and verified.
 - Macro execution is auditable through the trace IR in the world-state event store.
 - Any macro can be demoted or disabled at any time in the artifact version store.
@@ -263,42 +263,14 @@
 
 ## Trust Boundary Summary
 
-```
-┌─────────────────────────────────────────────────────────┐
-│ UNTRUSTED                                               │
-│  ┌───────────────┐  ┌───────────────┐  ┌─────────────┐  │
-│  │ LLM Provider  │  │ External APIs │  │ Unapproved  │  │
-│  │ (compromised) │  │ (compromised) │  │ Channels    │  │
-│  └───────┬───────┘  └───────┬───────┘  └──────┬──────┘  │
-│     normalized          filtered        no processing   │
-│     requests only       views only            │         │
-├──────────┼──────────────────┼─────────────────┼─────────┤
-│ PENDING  │                  │                 │         │
-│  ┌───────┴──────────────────┴─────────────────┴──────┐  │
-│  │ Pending Channels (awaiting Admin approval)        │  │
-│  │ ↓ no event processing, no graph access            │  │
-├──┼───────────────────────────────────────────────────┼──┤
-│  │ SEMI-TRUSTED                                      │  │
-│  │  ┌─────────────────────────────────────────────┐  │  │
-│  │  │ Sub-Users (elevated external entities)      │  │  │
-│  │  │ ↓ domain-restricted, privacy-capped         │  │  │
-│  │  │ Edge Node (PEN)                             │  │  │
-│  │  │ ↓ structured events only                    │  │  │
-│  │  └─────────────────────────────────────────────┘  │  │
-├──┼───────────────────────────────────────────────────┼──┤
-│  │ TRUSTED                                           │  │
-│  │  ┌─────────────────────────────────────────────┐  │  │
-│  │  │ Admin (primary webUI + merged identities)   │  │  │
-│  │  │ ↓ full access, all domains, all privacy     │  │  │
-│  │  │ Homelab (Trusted Core)                      │  │  │
-│  │  │ ↓ Event Store + Kernel + Memory + Knowledge │  │  │
-│  │  │ All execution validated, all events hashed  │  │  │
-│  │  └─────────────────────────────────────────────┘  │  │
-└──┴───────────────────────────────────────────────────┴──┘
+The system enforces four trust zones. See [GRAPH.md](GRAPH.md#trust-hierarchy) for the full hierarchy.
 
-Trust flows: Admin approves channels -> channels bind to entities ->
-entities have permissions -> permissions filter retrieval
-```
+- **UNTRUSTED:** LLM Provider (compromised — receives normalized requests only), External APIs (compromised — receives filtered views only), Unapproved Channels (no processing capability)
+- **PENDING:** Channels awaiting Admin approval — no event processing, no graph access
+- **SEMI-TRUSTED:** Sub-Users (domain-restricted, privacy-capped), Edge Node / PEN (structured events only)
+- **TRUSTED:** Admin (primary webUI + merged identities — full access, all domains, all privacy), Homelab / Trusted Core (Event Store + Kernel + Memory + Knowledge — all execution validated, all events hashed)
+
+Trust flows: Admin approves channels → channels bind to entities → entities have permissions → permissions filter retrieval.
 
 ## Security Posture Summary
 

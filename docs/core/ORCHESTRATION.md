@@ -135,27 +135,27 @@ The same primitives, different services.
 
 ### Commutativity
 
-| Primitive        | Commutative?  | Notes                                                    |
-| ---------------- | ------------- | -------------------------------------------------------- | ----------------------------------------------- |
-| `parallel(a, b)` | Yes           | Order does not affect result                             |
-| `race(a, b)`     | Yes           | Order does not affect result (both start simultaneously) |
-| `run(a)          | > run(b)`     | No                                                       | Sequential order matters                        |
-| `acquire(a)      | > acquire(b)` | No                                                       | LIFO release order depends on acquisition order |
+| Primitive                      | Commutative? | Notes                                                    |
+| ------------------------------ | ------------ | -------------------------------------------------------- |
+| `parallel(a, b)`               | Yes          | Order does not affect result                             |
+| `race(a, b)`                   | Yes          | Order does not affect result (both start simultaneously) |
+| `run(a)` then `run(b)`         | No           | Sequential order matters                                 |
+| `acquire(a)` then `acquire(b)` | No           | LIFO release order depends on acquisition order          |
 
 ### Associativity
 
-| Primitive                     | Associative? | Notes                             |
-| ----------------------------- | ------------ | --------------------------------- | ----------------------------------- |
-| `parallel(a, parallel(b, c))` | Yes          | Equivalent to `parallel(a, b, c)` |
-| `pipe(a)                      | > pipe(b)`   | Yes                               | Function composition is associative |
-| `layer(a)                     | > layer(b)`  | Yes                               | Layer composition is associative    |
+| Primitive                     | Associative? | Notes                               |
+| ----------------------------- | ------------ | ----------------------------------- |
+| `parallel(a, parallel(b, c))` | Yes          | Equivalent to `parallel(a, b, c)`   |
+| `pipe(a)` then `pipe(b)`      | Yes          | Function composition is associative |
+| `layer(a)` then `layer(b)`    | Yes          | Layer composition is associative    |
 
 ### Identity
 
-| Primitive           | Identity Element      | Notes                                         |
-| ------------------- | --------------------- | --------------------------------------------- | -------------------------- |
-| `parallel(a, unit)` | `unit` (no-op effect) | `parallel(a, unit)` is equivalent to `run(a)` |
-| `pipe(a)            | > pipe(identity)`     | `identity` (pass-through transform)           | No effect on stream values |
+| Primitive                       | Identity Element                    | Notes                      |
+| ------------------------------- | ----------------------------------- | -------------------------- |
+| `parallel(a, unit)`             | `unit` (no-op effect)               | Equivalent to `run(a)`     |
+| `pipe(a)` then `pipe(identity)` | `identity` (pass-through transform) | No effect on stream values |
 
 ## Error Propagation Rules
 

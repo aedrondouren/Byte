@@ -126,7 +126,7 @@ Entity
     └── derived preferences, behavioral patterns
 ```
 
-**Known vs. Unknown Entities.** An entity becomes "known" once it has an entry in the Entity Graph — regardless of trust level. A known entity carries accumulated identity identifiers (from multiple channels), relationship history, and associated knowledge/memories in the world-state graphs. If a known entity is demoted (e.g., from `trusted_user` back to `untrusted`), the entity definition remains in the Entity Graph with reduced permissions, but all accumulated identity, relationship context, and historical knowledge persists. The system retains understanding of who this entity is even without runtime access. An "unknown" entity is a raw channel identifier with no Entity Graph entry.
+**Known vs. Unknown Entities.** An entity becomes "known" once it has an entry in the Entity Graph. Known entities persist through demotion, preserving accumulated identity and relationship context. An "unknown" entity is a raw channel identifier with no Entity Graph entry. → See [ENTITIES.md](./core/ENTITIES.md#entity-store-strategy) for the full treatment.
 
 **Internal entities** represent operational projections of the runtime (Technical Assistant, Companion, Stream Host, Automation Agent). They define retrieval policies over the shared graph — accessible domains, privacy levels, allowed channels, tool permissions, and sensor permissions. Internal entities do not require Admin elevation.
 
@@ -224,24 +224,13 @@ The system treats AI reasoning as a replaceable transform, not the center of the
 ### 3.1 System Layers
 
 ```
-World-State Event Store  ◄──►  Artifact Version Store
-    │                               │
-    └───────────┬───────────────────┘
-                │
-        Cognitive Kernel
-                │
-        ┌───────┴───────┐
-        │               │
-      RPU         Semantic Orchestration
-    (reasoning)    (Tool / App Services)
-        │               │
-        └───────┬───────┘
-                │
-        Macro Optimization
-    (discovery, validation, audit)
-                │
-           Channels
-    (Web, Discord, CLI, API)
+World-State Event Store ◄──► Artifact Version Store
+    │
+    └── Cognitive Kernel
+         ├── RPU (reasoning)
+         ├── Semantic Orchestration (Tool / App Services)
+         ├── Macro Optimization (discovery, validation, audit)
+         └── Channels (Web, Discord, CLI, API)
 ```
 
 The stores hold all system state — events (perception, execution, memory, knowledge) and artifacts (macros, skills, code components). The kernel governs execution, invoking the RPU for structured reasoning and semantic orchestration primitives for deterministic tool composition. The optimization layer compresses experience into reusable structure. Channels expose projected state to external surfaces.
@@ -249,6 +238,8 @@ The stores hold all system state — events (perception, execution, memory, know
 This diagram shows the homelab runtime. Edge nodes run perception processing and local inference, sending only structured events to the homelab. AI models are accessed through the LLM Runtime adapter and are not part of the core architecture.
 
 ### 3.2 Build Phases and Document Mapping
+
+See [PHASES.md](../PHASES.md) for the canonical build phases table, dependencies, and current status.
 
 | Phase | Component                           | Document Sections | Core Documents                                | Status          |
 | ----- | ----------------------------------- | ----------------- | --------------------------------------------- | --------------- |
@@ -315,7 +306,7 @@ Entity Definition
 └── lifecycle_state: discovered | pending_review | active | suspended | merged | revoked
 ```
 
-**Known vs. Unknown Entities.** An entity becomes "known" once it has an entry in the Entity Graph — regardless of trust level. A known entity carries accumulated identity identifiers from multiple channels, relationship history, and associated knowledge/memories in the world-state graphs. If a known entity is demoted (e.g., from `trusted_user` back to `untrusted`), the entity definition remains in the Entity Graph with reduced permissions, but all accumulated identity, relationship context, and historical knowledge persists. The system retains understanding of who this entity is even without runtime access. An "unknown" entity is a raw channel identifier with no Entity Graph entry — detected but not yet promoted to an entity definition.
+**Known vs. Unknown Entities.** An entity becomes "known" once it has an entry in the Entity Graph. Known entities persist through demotion, preserving accumulated identity and relationship context. An "unknown" entity is a raw channel identifier with no Entity Graph entry. → See [ENTITIES.md](./core/ENTITIES.md#entity-store-strategy) for the full treatment.
 
 **Identity merging as a DAG operation.** Two entity definitions from different channels can be merged into a single successor definition, preserving both as ancestors in the DAG. The merged entity is a new version with two parents, fitting the artifact store's DAG model natively. This enables the system to unify "discord:@admin_user" and "voice_print_abc" into a single Admin entity while preserving the provenance of each identity source.
 
@@ -370,8 +361,6 @@ Event Stream → Entity State Projection (world-state event store, derived state
 ```
 
 Projections that write to the world-state event store produce events. Projections that write to the artifact version store produce artifact versions. The discovery pipeline (Section 9.1) reads from the world-state event store and writes to the artifact version store when proposing new macro versions. The entity state projection reads from the world-state event store and produces derived state for each known entity — this state is not stored as an artifact but is computed on demand or cached.
-
-Projections that write to the world-state event store produce events. Projections that write to the artifact version store produce artifact versions. The discovery pipeline (Section 9.1) reads from the world-state event store and writes to the artifact version store when proposing new macro versions.
 
 Projections optimize for correctness, queryability, persistence, and composition. They can be chained — the output of one projection becomes the input of another. The summarization pipeline (section 8) is a chain of projections: situation model into narrative memories, into validated knowledge.
 
@@ -442,7 +431,7 @@ An **Entity** is any persistent thing that can participate in events. Entities a
 Entity Definition (Entity Graph) + Entity State (event projection) + Channel Binding = Runtime Entity Context
 ```
 
-**Known vs. Unknown Entities.** An entity becomes "known" once it has an entry in the Entity Graph — regardless of trust level. A known entity carries accumulated identity identifiers (from multiple channels), relationship history, and associated knowledge/memories in the world-state graphs. If a known entity is demoted (e.g., from `trusted_user` back to `untrusted`), the entity definition remains in the Entity Graph with reduced permissions, but all accumulated identity, relationship context, and historical knowledge persists. The system retains understanding of who this entity is even without runtime access. An "unknown" entity is a raw channel identifier with no Entity Graph entry.
+**Known vs. Unknown Entities.** An entity becomes "known" once it has an entry in the Entity Graph. Known entities persist through demotion, preserving accumulated identity and relationship context. An "unknown" entity is a raw channel identifier with no Entity Graph entry. → See [ENTITIES.md](./core/ENTITIES.md#entity-store-strategy) for the full treatment.
 
 **Internal entities** (Technical Assistant, Companion, Stream Host, Automation Agent) are operational projections of the runtime. They define retrieval policies over the shared graph: accessible domains, privacy levels, allowed channels, tool permissions, and sensor permissions. Internal entities do not own separate memory stores.
 
