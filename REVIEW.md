@@ -2,6 +2,7 @@
 
 > Independent expert analysis of the B.Y.T.E. (Behavior Yielding Through Evolution) concept documentation set.
 > Reviewed: 27 documents, ~6,300 lines of specification.
+> Reviewed: 27 documents, ~6,300 lines of specification.
 > Last updated: June 2026.
 
 ---
@@ -28,9 +29,16 @@ The documentation set is **exceptional for a concept-stage project**. It is read
 
 ### Root-Level (6 files + LICENSE)
 
+### Root-Level (6 files + LICENSE)
+
 | Document          | Lines | Role                                                  | Grade |
 | ----------------- | ----- | ----------------------------------------------------- | ----- |
 | `README.md`       | 93    | Project abstract, navigation, thesis statement        | A     |
+| `START_HERE.md`   | 105   | Entry point, day-in-the-life narrative, reading paths | A     |
+| `REVIEW.md`       | 304   | Independent expert documentation review               | —     |
+| `CONTRIBUTING.md` | 39    | Contribution guidelines (design-phase only)           | B+    |
+| `PHASES.md`       | 97    | Canonical build phase status and dependencies         | A     |
+| `LICENSE`         | 21    | Legal                                                 | N/A   |
 | `START_HERE.md`   | 105   | Entry point, day-in-the-life narrative, reading paths | A     |
 | `REVIEW.md`       | 304   | Independent expert documentation review               | —     |
 | `CONTRIBUTING.md` | 39    | Contribution guidelines (design-phase only)           | B+    |
@@ -45,21 +53,31 @@ The documentation set is **exceptional for a concept-stage project**. It is read
 | `docs/DOCUMENT_MAP.md`        | 140    | Dependency graph, reading order, status tracking      | A     |
 | `docs/REFERENCE.md`           | 177    | Glossary (41+ defined terms, includes Reasoning Hint) | A     |
 | `docs/TECHNICAL_CONCEPT.md`   | ~1,376 | Core specification (18 sections)                      | A     |
+| `docs/CONCEPTUAL_OVERVIEW.md` | 198    | Plain-language explanation for non-technical readers  | A-    |
+| `docs/DOCUMENT_MAP.md`        | 140    | Dependency graph, reading order, status tracking      | A     |
+| `docs/REFERENCE.md`           | 177    | Glossary (41+ defined terms, includes Reasoning Hint) | A     |
+| `docs/TECHNICAL_CONCEPT.md`   | ~1,376 | Core specification (18 sections)                      | A     |
 
 ### Core Subsystems (17 files)
 
 | Document                             | Lines | Role                                                         | Grade |
 | ------------------------------------ | ----- | ------------------------------------------------------------ | ----- |
 | `docs/core/ARCHITECTURE_DIAGRAMS.md` | 283   | Simple flow diagrams; prose descriptions for complex visuals | A     |
+| `docs/core/ARCHITECTURE_DIAGRAMS.md` | 283   | Simple flow diagrams; prose descriptions for complex visuals | A     |
 | `docs/core/CHANNELS.md`              | 274   | Channel architecture, approval, control signals              | A     |
 | `docs/core/DESIGN_DECISIONS.md`      | 427   | Rationale behind every major architectural choice            | A+    |
+| `docs/core/DESIGN_DECISIONS.md`      | 427   | Rationale behind every major architectural choice            | A+    |
 | `docs/core/EDGE_ARCHITECTURE.md`     | 107   | Portable Personal Edge Node (PEN) spec                       | B+    |
+| `docs/core/ENTITIES.md`              | 525   | Entity model, trust levels, permissions, merging             | A     |
 | `docs/core/ENTITIES.md`              | 525   | Entity model, trust levels, permissions, merging             | A     |
 | `docs/core/EVALUATION.md`            | 169   | Evaluation methodology, baselines, ablation studies          | B+    |
 | `docs/core/GRAPH.md`                 | 312   | World-state graph, query complexity, indexing                | A     |
 | `docs/core/KNOWN_GAPS.md`            | 175   | Open problems and future work (15+ gaps)                     | A     |
+| `docs/core/GRAPH.md`                 | 312   | World-state graph, query complexity, indexing                | A     |
+| `docs/core/KNOWN_GAPS.md`            | 175   | Open problems and future work (15+ gaps)                     | A     |
 | `docs/core/MACROS.md`                | 361   | Macro system: discovery, validation, demotion                | A     |
 | `docs/core/MULTIMODAL_INTERFACE.md`  | 109   | Multimodal cognitive interface (EEG, gaze, EMG)              | B+    |
+| `docs/core/OFFLINE_OPTIMIZATION.md`  | 120   | Background optimization loop activities                      | A-    |
 | `docs/core/OFFLINE_OPTIMIZATION.md`  | 120   | Background optimization loop activities                      | A-    |
 | `docs/core/ORCHESTRATION.md`         | 200   | Semantic orchestration primitives (Effect.ts model)          | A     |
 | `docs/core/REGISTRY.md`              | 151   | Code registry: versioning, transpilation, dependencies       | A-    |
@@ -208,10 +226,15 @@ Phase tables now use consistent wording across documents ("Memory + Knowledge + 
 ### Cross-References — Excellent (A)
 
 Every document includes a "Related" section with precise links. `DOCUMENT_MAP.md` includes entries for all documents in the Cross-Reference Index. Heading-based anchors are used consistently. All cross-document anchor links have been verified correct (including `#1-introduction`, `#3-architecture-overview`, `#14-core-invariants`, `#15-security-and-privacy-considerations`, `#16-evaluation-methodology`, `#entity-store-strategy`, `#macro-discovery-section-91`, `#32-build-phases-and-document-mapping`, `#primary-metric-reasoning-cost-token-count-per-task`, `#orchestration-harness`).
+Every document includes a "Related" section with precise links. `DOCUMENT_MAP.md` includes entries for all documents in the Cross-Reference Index. Heading-based anchors are used consistently. All cross-document anchor links have been verified correct (including `#1-introduction`, `#3-architecture-overview`, `#14-core-invariants`, `#15-security-and-privacy-considerations`, `#16-evaluation-methodology`, `#entity-store-strategy`, `#macro-discovery-section-91`, `#32-build-phases-and-document-mapping`, `#primary-metric-reasoning-cost-token-count-per-task`, `#orchestration-harness`).
 
 ### ASCII Diagram Rationalization — Completed
 
 12 complex 2D ASCII art diagrams with box-drawing characters have been replaced with prose descriptions or simple portable formats (file-tree, arrow chains). The remaining ~60 diagrams are all code blocks, markdown tables, file-tree diagrams, or simple arrow chains — all of which render consistently across devices and markdown renderers.
+
+### Interface Consistency — Resolved (A)
+
+The `ContextProjection` interface in `RPU.md` has been aligned with the canonical definition in `RETRIEVAL.md`. Both now use `EntityDefinition[]`, `EntityState[]`, `activeEntity`, `activeEntityState`, and `permissionSummary` consistently.
 
 ### Interface Consistency — Resolved (A)
 
@@ -292,14 +315,17 @@ The `ContextProjection` interface in `RPU.md` has been aligned with the canonica
 11. Create `CHANGELOG.md` for revision tracking.
 12. Create `AGENTS.md` with AI assistant instructions for this project.
 13. Consider splitting `TECHNICAL_CONCEPT.md` (~1,376 lines) into multiple documents for maintainability.
-14. Add "What B.Y.T.E. Cannot Do" section to explicitly state limitations and prevent scope creep.
+14. Consider splitting `TECHNICAL_CONCEPT.md` (~1,376 lines) into multiple documents for maintainability.
+15. Add "What B.Y.T.E. Cannot Do" section to explicitly state limitations and prevent scope creep.
 
 ---
 
 ## Final Assessment
 
 **Overall Grade: A- (Research-Ready Design Documentation)**
+**Overall Grade: A- (Research-Ready Design Documentation)**
 
+B.Y.T.E. is an exceptionally well-designed concept-stage architecture. The core thesis is novel, the architectural decisions are well-justified, and the documentation quality is far above what is typical for pre-implementation projects. The security posture is strong, the evaluation methodology is present (if imperfect), and the gap acknowledgment is admirably honest. All known structural defects have been resolved: duplicate paragraphs removed, malformed code blocks fixed, incorrect counts corrected, broken cross-references repaired, and interface definitions aligned.
 B.Y.T.E. is an exceptionally well-designed concept-stage architecture. The core thesis is novel, the architectural decisions are well-justified, and the documentation quality is far above what is typical for pre-implementation projects. The security posture is strong, the evaluation methodology is present (if imperfect), and the gap acknowledgment is admirably honest. All known structural defects have been resolved: duplicate paragraphs removed, malformed code blocks fixed, incorrect counts corrected, broken cross-references repaired, and interface definitions aligned.
 
 The primary risks are:
