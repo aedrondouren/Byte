@@ -36,7 +36,7 @@ This document explains why the architecture makes the choices it does. Each deci
 
 ## Why Two Stores, Eight Graphs
 
-**Decision:** The world-state graphs (perception, execution, memory, knowledge) share an append-only event store. The artifact graphs (macro, skill, registry, entity) use a separate versioned artifact store. Cross-store references use content hashes in events pointing to artifact ID+version — no unified index needed.
+**Decision:** The world-state graphs (perception, execution) share an append-only event store. The cognitive artifact graphs (memory, knowledge) and authored artifact graphs (macro, skill, registry, entity) use a separate versioned artifact store. Cross-store references use content hashes in events pointing to artifact ID+version — no unified index needed.
 
 **Alternatives considered:**
 
@@ -46,15 +46,16 @@ This document explains why the architecture makes the choices it does. Each deci
 
 **Reasoning:**
 
-- **Different data models.** World-state graphs are projections of an append-only event stream — state is derived by replaying events. Artifact graphs are versioned entities with semantic versioning and lifecycle management — state is the latest version per artifact. Conflating these models creates conceptual and practical problems.
-- **Different query patterns.** World-state queries are temporal and causal ("what happened between T1 and T2?"). Artifact queries are identity-based ("what is the current version of macro X?"). Separate stores keep queries simple and indexing efficient.
-- **Different lifecycle.** Events are immutable and never change. Artifacts have lifecycle states (created, promoted, demoted, superseded, deprecated) and new versions can be created. An event store is not designed for version management.
+- **Three classes of data, not two.** Events are immutable evidence of what happened. Cognitive artifacts (memory, knowledge) are versioned interpretations — the system's current understanding of the world. Authored artifacts (macros, skills, code, entities) are deliberately created or curated entities. Memory and knowledge behave like artifacts: they have versions, confidence, lineage, revision chains, and can be superseded.
+- **Different data models.** World-state graphs are projections of an append-only event stream — state is derived by replaying events. Cognitive artifacts are produced by projections over events and existing artifacts — state is the latest version, with full history preserved. Authored artifacts are versioned entities with semantic versioning and lifecycle management — state is the latest version per artifact. Conflating these models creates conceptual and practical problems.
+- **Different query patterns.** World-state queries are temporal and causal ("what happened between T1 and T2?"). Cognitive artifact queries are semantic and version-aware ("what does the system currently believe about X, and how confident is it?"). Artifact queries are identity-based ("what is the current version of macro X?"). Separate stores keep queries simple and indexing efficient.
+- **Different lifecycle.** Events are immutable and never change. Cognitive artifacts accumulate versions through revision — new evidence or contradictions produce new versions while preserving history. Authored artifacts have lifecycle states (created, promoted, demoted, superseded, deprecated) and new versions can be created. An event store is not designed for version management.
 - **Different retention.** Events can be archived to cold storage after a time window. Artifacts must remain accessible as long as any reference points to them — retention is by reference, not by time.
 - **Implementation reality.** You'd use different storage backends: an event log (time-series DB or append-only log) for world-state, and a content-addressed store (Git-like or object store with metadata) for artifacts.
 
 **Trade-off:** Cross-store references require two lookups instead of one. However, this is O(1) + O(1) with proper indexing — the event stores the artifact ID+version, and the artifact store lookup is a direct hash. The cost is negligible compared to the clarity gained by separating the models.
 
-**Where the original design broke down:** The "everything is an event" model was a useful simplification during early design but doesn't hold under scrutiny. A macro v2 is not an "event" — it's a new version of an artifact. The event that _created_ macro v2 is in the world-state store; the macro artifact itself is not. Similarly, a skill definition is not an event — it's a versioned entity that generates events when executed. An entity definition is not an event — it's a versioned artifact that changes through discrete actions (elevation, merge, permission update).
+**Where the original design broke down:** The "everything is an event" model was a useful simplification during early design but doesn't hold under scrutiny. A macro v2 is not an "event" — it's a new version of an artifact. The event that _created_ macro v2 is in the world-state store; the macro artifact itself is not. Similarly, a skill definition is not an event — it's a versioned entity that generates events when executed. An entity definition is not an event — it's a versioned artifact that changes through discrete actions (elevation, merge, permission update). And critically, a memory or knowledge entry is not an event — it's a versioned interpretation built from evidence events, subject to revision, confidence changes, and supersession.
 
 ---
 
@@ -372,6 +373,31 @@ Several gaps are acknowledged but not resolved (KNOWN_GAPS.md). The deferral rat
 - **Reversibility.** If an entity is re-elevated, the immutable history is still available for re-derivation. Deleting memories would be irreversible.
 
 **Trade-off:** Storage growth. The immutable history grows indefinitely. The summarization pipeline and retention policies address this by archiving old events to cold storage while keeping summaries in hot storage.
+
+---
+
+## Why Memory and Knowledge Are Artifacts
+
+**Decision:** Memory and Knowledge are stored as versioned artifacts in the artifact version store, not as projections in the world-state event store. Evidence events (conversations, tool results, observations) remain in the event store. Memory and Knowledge artifacts are produced by projections over those evidence events and existing artifacts.
+
+**Alternatives considered:**
+
+- Memory and Knowledge as event-store projections (original design)
+- Memory and Knowledge as mutable state (traditional database model)
+- Memory and Knowledge as versioned artifacts (chosen approach)
+
+**Reasoning:**
+
+- **Memory and knowledge are interpretations, not facts.** A memory is not "what happened" — it is the system's current understanding of what happened. A knowledge entry is not "what is true" — it is the system's current best belief, subject to revision. These are cognitive constructs, not historical records.
+- **They exhibit artifact semantics.** Memory and knowledge have versions, confidence scores, provenance chains, and can be superseded. They support candidate → review → promotion workflows. Previous versions remain accessible for audit. This is exactly how the artifact store handles macros, skills, code, and entity definitions.
+- **The Entity Graph precedent.** Entity definitions are already split from entity state: the definition is a versioned artifact, the state is a projection from events. Memory and Knowledge follow the same pattern: evidence events are the raw data (event store), memory/knowledge artifacts are the interpreted understanding (artifact store).
+- **Humans don't reconstruct from raw sensory data.** Humans maintain memory objects and occasionally revise them. They don't replay every sensory event to reconstruct their current understanding. The same efficiency applies here: the system maintains memory artifacts and revises them when new evidence arrives, rather than re-projecting from the full event log on every access.
+- **Revision projections require artifact input.** A projection that revises a memory based on contradictory evidence needs to read the existing memory artifact, not just events. This is a multi-source projection: (events + existing artifact) → new artifact version. The event-store-only model cannot express this cleanly.
+- **Checkpoint promotion is artifact behavior.** The workflow of candidate memory → offline review → stable memory → repeated validation is artifact lifecycle management. Events don't do this. Artifacts do.
+
+**Trade-off:** The "state as projection" invariant is refined rather than abandoned. Current reality is still a projection of history — but "history" now includes both event history (what happened) and artifact history (what the system has believed and how that belief has evolved). This is more accurate to both the architecture and to how cognition actually works.
+
+**What this preserves:** Events remain immutable and append-only. The full evidence trail is always available. Projections remain the transformation mechanism. The Git philosophy is preserved — every memory and knowledge version is a "commit" with parents, provenance, and the ability to traverse history.
 
 ---
 

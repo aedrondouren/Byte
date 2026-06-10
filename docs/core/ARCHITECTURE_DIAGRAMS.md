@@ -13,8 +13,8 @@ This document contains the simple flow diagrams used across the architecture. Co
 
 The system has two stores connected to a cognitive kernel:
 
-- **World-State Event Store** — append-only, content-addressed events. Contains Perception Graph (what happened), Execution Graph (what was done), Memory Graph (what was experienced), Knowledge Graph (what is known). State is derived by projecting event history. Queries are temporal, causal, and semantic. Retention is time-window based with archival to cold storage.
-- **Artifact Version Store** — content-addressed, semantically versioned, lifecycle-managed. Contains Macro Graph (compiled patterns), Skill Registry (authored behaviors), Code Registry (tested components), Entity Graph (identity and permissions). State is the latest version per artifact. Queries are identity, version, and capability based. Retention is reference-based — artifacts are kept as long as anything points to them.
+- **World-State Event Store** — append-only, content-addressed events. Contains Perception Graph (what happened), Execution Graph (what was done). State is derived by projecting event history. Queries are temporal, causal, and semantic. Retention is time-window based with archival to cold storage.
+- **Artifact Version Store** — content-addressed, semantically versioned, lifecycle-managed. Contains Memory Graph (experienced events, versioned), Knowledge Graph (validated facts, versioned), Macro Graph (compiled patterns), Skill Registry (authored behaviors), Code Registry (tested components), Entity Graph (identity and permissions). State is the latest version per artifact. Queries are identity, version, capability, and semantic based. Retention is reference-based — artifacts are kept as long as anything points to them.
 
 Cross-store references use content hashes in events pointing to artifact ID+version. No unified index is needed.
 
@@ -139,11 +139,15 @@ Execution Chain
 ## Summarization Pipeline
 
 ```
-Situation Model (high volume, detailed)
+Situation Model (event store, high volume, detailed)
     ↓
-Narrative Memories (compressed, contextual)
+[Memory Extraction Projection]
     ↓
-Validated Knowledge (facts, patterns, schedules)
+Memory Artifacts (artifact store, compressed, contextual, versioned)
+    ↓
+[Knowledge Generalization Projection]
+    ↓
+Knowledge Artifacts (artifact store, facts, patterns, schedules, versioned)
 ```
 
 ---
@@ -208,13 +212,17 @@ The macro does not mandate what is captured. It compiles the detected pattern as
 ## Skill → Macro → Knowledge Provenance Chain
 
 ```
-Skill v1.0 (installed by user)
+Skill v1.0 (installed by user, artifact store)
     ↓ executed 47 times via RPU
     ↓
-Macro morning_briefing_v3
+Execution Traces (event store)
+    ↓
+Macro morning_briefing_v3 (artifact store)
     provenance: { source: "skill_morning_briefing", version: "v1.0" }
     ↓
-Knowledge: "user prefers 7AM briefing"
+Memory Artifacts (artifact store)
+    ↓
+Knowledge: "user prefers 7AM briefing" (artifact store)
     provenance: { source: "skill_morning_briefing", version: "v1.0" }
     ↓
 Skill updated to v1.1
@@ -222,7 +230,7 @@ Skill updated to v1.1
 Macro flagged for re-validation → demoted (status: source_updated)
     → falls back to skill execution via RPU
 Knowledge confidence decays (accelerated)
-    → re-corroborated by v1.1 executions → new knowledge entry with v1.1 provenance
+    → re-corroborated by v1.1 executions → new knowledge artifact with v1.1 provenance
     ↓
 New macro proposed from v1.1 traces → validated → promoted
 ```

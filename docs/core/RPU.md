@@ -75,7 +75,7 @@ External Systems
     RPU
 ```
 
-The RPU reasons over structured representations of reality — projections of the event graph — rather than reconstructing reality from conversational history.
+The RPU reasons over structured representations of reality — projections of the event graph and current cognitive artifacts — rather than reconstructing reality from conversational history.
 
 ### Model independence
 

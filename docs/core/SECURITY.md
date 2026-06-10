@@ -42,7 +42,7 @@ Macros derived from skill execution traces carry provenance links to their sourc
 Skills are pre-authored behavior definitions installed by the user from any source, stored in the artifact version store. The system does not curate or approve skills. Trust is the user's responsibility. The following integrity measures apply:
 
 - **Content-addressed storage.** Every skill version is identified by its cryptographic hash (SHA-256). Once published, a skill version cannot be changed. The hash is the canonical identifier; semantic version tags are mutable pointers.
-- **Provenance tracking.** All macros and knowledge entries derived from skill execution carry immutable provenance metadata linking them to the specific skill version that produced them. Cross-store references link artifact versions to world-state events.
+- **Provenance tracking.** All macros and knowledge artifacts derived from skill execution carry immutable provenance metadata linking them to the specific skill version that produced them. Cross-store references link artifact versions to world-state events.
 - **Version isolation.** When a skill is updated, the new version is stored as a separate artifact. Old versions remain available for derived artifact re-validation and audit.
 - **Open ecosystem boundary.** Skills from untrusted sources execute within the same RPU contract as all other reasoning — the kernel validates outputs, tool calls are authorized, and state updates are verified. A malicious skill cannot execute arbitrary actions; it can only propose intent through the structured RPU contract.
 

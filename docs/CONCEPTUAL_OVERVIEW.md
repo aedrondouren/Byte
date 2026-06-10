@@ -74,14 +74,14 @@ The system organizes what it knows into eight domains, stored across two data mo
 | ----------------- | -------------------------------- | --------------------------------------------------- | -------------- |
 | **Perception**    | What the system has observed     | "User is at their desk, working on a laptop"        | Event store    |
 | **Execution**     | What the system has done         | "Fetched weather forecast, sent to user"            | Event store    |
-| **Memory**        | What the system has experienced  | "User asked for weather every morning this week"    | Event store    |
-| **Knowledge**     | What the system knows to be true | "User prefers morning weather briefings for Boston" | Event store    |
+| **Memory**        | What the system has experienced  | "User asked for weather every morning this week"    | Artifact store |
+| **Knowledge**     | What the system knows to be true | "User prefers morning weather briefings for Boston" | Artifact store |
 | **Macros**        | Patterns that repeat             | Compiled routine: morning briefing workflow         | Artifact store |
 | **Skills**        | Pre-authored behavior templates  | Installed skill: morning briefing (from community)  | Artifact store |
 | **Code Registry** | Tested code components           | Validated function: format weather data             | Artifact store |
 | **Entity Graph**  | Who participates in the system   | Admin, family members, guests, internal assistants  | Artifact store |
 
-Four domains (perception, execution, memory, knowledge) are derived from the system's lived experience as an append-only event stream. Four domains (macros, skills, code registry, entity graph) are versioned artifacts — entities the system creates, manages, and evolves over time.
+Two domains (perception, execution) are derived from the system's lived experience as an append-only event stream. Six domains (memory, knowledge, macros, skills, code registry, entity graph) are versioned artifacts — entities the system creates, manages, and evolves over time. Memory and knowledge are cognitive artifacts: the system's evolving understanding, produced by projections over evidence events.
 
 Skills are an optional seed — behaviors the user may install to accelerate early competence. The system works without skills, discovering patterns organically. As skills execute (when installed), the system learns from the execution traces and compiles personalized, optimized versions (macros) that carry provenance links back to the original skill.
 
@@ -113,11 +113,11 @@ The system learns through a multi-stage pipeline:
 2. **Situation Model** — observations are combined into understanding ("user is in a focused work session")
 3. **Intent** — understanding becomes action ("offer assistance"), including proactive suggestions from learned temporal patterns
 4. **Execution** — actions are carried out by the kernel using deterministic primitives
-5. **Summarization** — outcomes are compressed into narrative memories, then validated into knowledge facts
+5. **Summarization** — outcomes are compressed into memory artifacts (versioned experiences), then validated into knowledge artifacts (versioned facts)
 6. **Macros** — frequently-used workflows are compiled into efficient deterministic routines
 7. **Temporal Intent** — recurring patterns from knowledge become scheduled automations (with your approval)
 
-Each stage compresses the previous one. Raw sensor data (gigabytes per hour) becomes structured perception (kilobytes per hour), which becomes situation models (bytes per event), which becomes memories (one sentence per experience), which becomes knowledge (one fact per pattern).
+Each stage compresses the previous one. Raw sensor data (gigabytes per hour) becomes structured perception (kilobytes per hour), which becomes situation models (bytes per event), which becomes memory artifacts (one sentence per experience, versioned), which becomes knowledge artifacts (one fact per pattern, versioned).
 
 ---
 

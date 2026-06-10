@@ -51,7 +51,7 @@ This composition means that the same entity definition can produce different run
 
 ## Core Principle
 
-The runtime does not distinguish between "agent memory" and "user memory." Instead, it maintains a single immutable history and a unified knowledge graph from which multiple projections are derived. Entities are graph nodes with relationships and metadata, not containers for isolated memories.
+The runtime does not distinguish between "agent memory" and "user memory." Instead, it maintains a single immutable history and a unified knowledge artifact store from which multiple projections are derived. Entities are graph nodes with relationships and metadata, not containers for isolated memories.
 
 ```
 Entity
@@ -422,11 +422,12 @@ Allow or Deny + log event
 
 ## Immutability and Invalidation
 
-- **Memories and events:** Immutable, never deleted or modified. They are the shared substrate of the runtime.
-- **Knowledge:** Invalidated when source entity permissions change. If an entity is demoted, knowledge derived from that entity enters accelerated confidence decay or is restricted based on the new permission profile.
+- **Events:** Immutable, never deleted or modified. They are the shared substrate of the runtime.
+- **Memory artifacts:** Versioned, not immutable. New evidence or contradictions produce new versions. Previous versions remain accessible for audit and replay.
+- **Knowledge artifacts:** Versioned, not immutable. When contradicted, a new version supersedes the old. Full revision history is preserved.
 - **Macros:** Invalidated when source entity permissions change. If an entity is demoted, macros derived from that entity's execution are demoted until re-validated under the new permission profile.
 
-This preserves the integrity of the immutable history while ensuring that derived artifacts respect current trust boundaries.
+This preserves the integrity of the immutable event history while ensuring that derived cognitive artifacts respect current trust boundaries and can evolve with new evidence.
 
 ---
 

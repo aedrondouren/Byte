@@ -19,7 +19,7 @@ The system does not observe the world. It continuously extends its world-state g
 - **AI as interpretation layer**, not control system
 - **Event-driven world-state representation** instead of raw media storage
 - **Edge-cloud separation of cognition** — real-time perception on edge, reflective intelligence on homelab
-- **Progressive summarization** — raw perception becomes structured events, then narrative memories, then validated knowledge
+- **Progressive summarization** — raw perception becomes structured events, then memory artifacts, then validated knowledge artifacts
 - **Graceful degradation when disconnected** — local compute handles bounded tasks without homelab coordination
 
 ## Hardware Topology

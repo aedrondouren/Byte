@@ -234,7 +234,7 @@ Parent macros pass parameters to child macros through a binding syntax:
 | ---------------- | --------------------------------------- | --------------------------------------------- |
 | Literal          | `"location": "Boston"`                  | The literal value                             |
 | Parent parameter | `"location": "{parent.location}"`       | The parent macro's parameter                  |
-| User context     | `"location": "{user_home_location}"`    | A value from the knowledge graph              |
+| User context     | `"location": "{user_home_location}"`    | A value from the knowledge artifacts          |
 | Computed         | `"radius": "{parent.max_distance / 2}"` | A computed value (if arithmetic is supported) |
 
 Parameter binding is resolved at macro execution time, before the child subgraph is inlined.
@@ -299,7 +299,7 @@ interface RPURequest {
 }
 ```
 
-This gives the RPU local awareness of what just happened and why, alongside targeted memories from the memory graph and validated facts from the knowledge graph. When the captured plan is present, it provides rich intent context for the RPU to reason about. The window is bounded so it doesn't inflate context size unnecessarily — only recent decisions matter for immediate next-step reasoning.
+This gives the RPU local awareness of what just happened and why, alongside targeted memory artifacts and validated knowledge artifacts. When the captured plan is present, it provides rich intent context for the RPU to reason about. The window is bounded so it doesn't inflate context size unnecessarily — only recent decisions matter for immediate next-step reasoning.
 
 ## Validation Test Design
 

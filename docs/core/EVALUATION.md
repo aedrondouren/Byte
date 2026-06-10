@@ -23,12 +23,12 @@ The baseline is established in Phase 2 (RPU + Orchestration): reasoning cost for
 
 ## Measurement Points
 
-| Phase   | What Is Added                              | Expected Effect                                                                                                                                                                           |
-| ------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Phase 2 | Planning-first, structured contracts       | Minimal reduction: plan reuse avoids re-derivation                                                                                                                                        |
-| Phase 3 | Signal-to-intent pipeline                  | Moderate reduction: structured context replaces ad-hoc prompting                                                                                                                          |
-| Phase 4 | Memory + Knowledge graphs + Skill Registry | **Significant reduction**: validated facts eliminate re-derivation, narrative memories replace raw context. Skills provide structured behavior from day one (not part of the thesis test) |
-| Phase 5 | Macros (pattern-derived + skill-derived)   | Additional reduction: compiled execution patterns replace reasoning entirely for repeated tasks; skill-derived macros provide faster path for skill-covered domains                       |
+| Phase   | What Is Added                                 | Expected Effect                                                                                                                                                                         |
+| ------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 2 | Planning-first, structured contracts          | Minimal reduction: plan reuse avoids re-derivation                                                                                                                                      |
+| Phase 3 | Signal-to-intent pipeline                     | Moderate reduction: structured context replaces ad-hoc prompting                                                                                                                        |
+| Phase 4 | Memory + Knowledge artifacts + Skill Registry | **Significant reduction**: validated facts eliminate re-derivation, memory artifacts replace raw context. Skills provide structured behavior from day one (not part of the thesis test) |
+| Phase 5 | Macros (pattern-derived + skill-derived)      | Additional reduction: compiled execution patterns replace reasoning entirely for repeated tasks; skill-derived macros provide faster path for skill-covered domains                     |
 
 Skills are available from Phase 4 and execute through the RPU with full reasoning. They make the harness functionally complete but do not affect the thesis measurement. The falsification criterion compares Phase 4 (memory + knowledge) against the Phase 2 baseline — skills are a constant across both and therefore cancel out.
 
@@ -85,7 +85,7 @@ To isolate the contribution of each subsystem, the following ablation studies wi
 | ---------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | **No skills**                | All skills uninstalled; system starts cold                  | Baseline reasoning cost without any seed behaviors; measures cold-start penalty |
 | **No knowledge graph**       | Knowledge validation pipeline disabled                      | Impact of validated facts vs. raw memory alone                                  |
-| **No memory graph**          | Narrative memory and retrieval disabled                     | Impact of experience recall vs. no recall                                       |
+| **No memory graph**          | Memory artifacts and retrieval disabled                     | Impact of experience recall vs. no recall                                       |
 | **No macros**                | Macro discovery and compilation disabled                    | Impact of execution compression vs. raw execution                               |
 | **No skill-derived macros**  | Skills execute via RPU only; no compression of skill traces | Impact of skill-to-macro transformation vs. skill-only baseline                 |
 | **No temporal intent**       | Temporal pattern extraction disabled                        | Impact of proactive automation vs. reactive only                                |

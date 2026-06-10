@@ -2,7 +2,7 @@
 
 > Expands on the World-State Graph Architecture section of [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md#4-world-state-graph-architecture).
 
-> **The world-state graph is a Git-like, content-addressed history of cognition. Every perception, reasoning step, tool call, scheduler decision, and state transition is recorded as an immutable event in a causally linked DAG. Current state is not stored separately; it is a projection of the event history.**
+> **The world-state graph is a Git-like, content-addressed history of cognition. Every perception, reasoning step, tool call, scheduler decision, and state transition is recorded as an immutable event in a causally linked DAG. Current reality is continuously updated from event history and cognitive artifact history.**
 
 ### Events are commits
 
@@ -18,26 +18,32 @@ Every event is immutable, references its causal parents, is cryptographically ha
 
 ### State is a projection
 
-```text
-History
+```
+Event History
     ↓
 Projection
     ↓
-Current World-State
+Current World-State (Perception + Execution)
+
+Event History + Existing Artifacts
+    ↓
+Revision Projection
+    ↓
+Current Cognitive Artifacts (Memory + Knowledge, versioned)
 ```
 
-Current state is derived from replaying events. Checkpoints accelerate reconstruction but do not replace history.
+Current world-state is derived by replaying events. Cognitive artifacts are produced and revised by projections over events and existing artifacts. Checkpoints accelerate reconstruction but do not replace history.
 
 ### The full projection pipeline
 
-```text
+```
 Raw Signals
     ↓
 Perception Processing
     ↓
 Perception
     ↓
-Perception Graph
+Perception Graph (event store)
     ↓
 Entity Discovery
     ↓
@@ -45,21 +51,21 @@ Entity Graph (versioned definitions, artifact store)
     ↓
 Situation Model Generation
     ↓
-Situation Model
+Situation Model (event store)
     ↓
 Intent Estimation
     ↓
-Intent
+Intent (event store)
     ↓
-Execution Graph
+Execution Graph (event store)
     ↓
 Memory Extraction (with metadata: subjects, domain, privacy, origin)
     ↓
-Memory Graph
+Memory Graph (artifact store, versioned)
     ↓
 Knowledge Generalization (with preserved provenance, dual-access)
     ↓
-Knowledge Graph
+Knowledge Graph (artifact store, versioned)
     ↓
 Retrieval Pipeline (entity definition ∩ channel ∩ domain ∩ privacy ∩ relevance)
     ↓
@@ -67,42 +73,44 @@ ContextProjection → RPU / Execution
 
 Skill (pre-authored, executed via RPU)
     ↓
-Execution Graph (skill execution traces)
+Execution Graph (skill execution traces, event store)
     ↓
-Macro Graph (skill-derived, with provenance)
+Macro Graph (skill-derived, artifact store, with provenance)
     ↓
-Knowledge Graph (skill-derived, with provenance)
+Knowledge Graph (skill-derived, artifact store, with provenance)
 ```
 
-Each arrow is a projection — a pure function over an event stream. Skill-derived projections carry provenance metadata linking derived artifacts to their source skill and version.
+Each arrow is a projection. Projections that produce evidence events write to the event store. Projections that produce cognitive artifacts (memory, knowledge) write to the artifact store as versioned entries. Projections that revise existing cognitive artifacts read events + existing artifacts and produce new artifact versions. Skill-derived projections carry provenance metadata linking derived artifacts to their source skill and version.
 
 ### Eight logical graphs, two stores
 
-The eight graphs are split across two data stores reflecting two fundamentally different data models.
+The eight graphs are split across two data stores reflecting three fundamentally different data models.
 
 **World-State Event Store** — append-only, content-addressed events. State is derived by projecting event history.
 
-```text
-Perception Graph  ── what happened       (event store)
-Execution Graph   ── what was done       (event store)
-Memory Graph      ── what was experienced (event store)
-Knowledge Graph   ── what is known       (event store)
+```
+Perception Graph  ── what happened            (event store, evidence)
+Execution Graph   ── what was done            (event store, evidence)
 ```
 
 **Artifact Version Store** — content-addressed, semantically versioned, lifecycle-managed. State is the latest version per artifact.
 
-```text
-Macro Graph       ── compiled patterns   (artifact store)
-Code Registry     ── tested components   (artifact store)
-Skill Registry    ── authored behaviors  (artifact store)
-Entity Graph      ── identity & permissions (artifact store)
 ```
+Memory Graph      ── what was experienced     (artifact store, cognitive, versioned)
+Knowledge Graph   ── what is known            (artifact store, cognitive, versioned)
+Macro Graph       ── compiled patterns        (artifact store, authored, versioned)
+Code Registry     ── tested components        (artifact store, authored, versioned)
+Skill Registry    ── authored behaviors       (artifact store, authored, versioned)
+Entity Graph      ── identity & permissions   (artifact store, authored, versioned)
+```
+
+Cognitive artifacts (Memory, Knowledge) are produced by projections over events and existing artifacts. They are versioned, carry confidence scores, and support revision chains. Authored artifacts (Macro, Code, Skill, Entity) are deliberately created or curated entities with lifecycle management.
 
 Cross-store references use content hashes in events pointing to artifact ID+version. No unified index is needed.
 
 ### Entity Graph
 
-The Entity Graph is the fourth artifact graph in the artifact version store. It stores **entity definitions** — versioned, content-addressed artifacts describing identity, trust level, permissions, and relationships for every participant in the system.
+The Entity Graph is the sixth artifact graph in the artifact version store. It stores **entity definitions** — versioned, content-addressed artifacts describing identity, trust level, permissions, and relationships for every participant in the system.
 
 Entity definitions are distinct from entity state. An entity definition is a versioned artifact that changes through discrete actions (admin elevation, identity merge, permission changes). Entity state is a projection over the world-state event stream (last seen, interaction count, derived preferences) and is not stored as an artifact.
 
@@ -227,7 +235,7 @@ The goal is tamper-evident history, causal lineage, replayability, auditability,
 
 ### One-Line Architecture Summary
 
-> **The Distributed Cognitive Runtime maintains a Git-like, cryptographically verifiable DAG of world-state events, where cognition, perception, execution, memory, and automation are represented as immutable history, and current reality is a continuously updated projection of that history. Projections transform graph state into graph state; channels expose projected state to external surfaces.**
+> **The Distributed Cognitive Runtime maintains a Git-like, cryptographically verifiable DAG of world-state events, where cognition, perception, execution, memory, and automation are represented as immutable evidence and versioned cognitive artifacts. Current reality is a continuously updated projection of event history and artifact history. Projections transform events and artifacts into new artifact versions; channels expose projected state to external surfaces.**
 
 ### Query Complexity and Cross-Graph Resolution
 
@@ -280,11 +288,11 @@ _World-State Event Store:_
 
 - **Perception graph:** Time-sorted index + spatial index (quadtree for location-based queries). Query cost: O(log n) for time range, O(log n) for spatial range.
 - **Execution graph:** Chain ID index (hash table) + status index (sorted) + tool type index (hash table). Query cost: O(1) for chain lookup, O(log n) for status/tool queries.
-- **Memory graph:** Semantic similarity index (vector database, approximate nearest neighbor). Query cost: O(log n) with HNSW or similar algorithm.
-- **Knowledge graph:** Topic index (hash table) + confidence index (sorted) + validity window index (interval tree). Query cost: O(1) for topic lookup, O(log n) for confidence/validity queries.
 
 _Artifact Version Store:_
 
+- **Memory graph:** Semantic similarity index (vector database, approximate nearest neighbor) + version index (sorted by semantic version). Query cost: O(log n) with HNSW or similar algorithm for similarity, O(1) for version lookup.
+- **Knowledge graph:** Topic index (hash table) + confidence index (sorted) + validity window index (interval tree) + version index (sorted by semantic version). Query cost: O(1) for topic lookup, O(log n) for confidence/validity queries, O(1) for version lookup.
 - **Macro graph:** Pattern index (hash table by normalized signature) + usage index (sorted by last-used time) + provenance index (hash table by source skill ID and version) + version index (sorted by semantic version). Query cost: O(1) for pattern lookup, O(log n) for usage queries, O(1) for provenance lookup, O(1) for version lookup.
 - **Skill registry:** Capability index (hash table by skill name/ID) + version index (sorted by semantic version) + tool access index (hash table by tool name). Query cost: O(1) for skill lookup, O(log n) for version queries, O(1) for tool access queries.
 - **Code registry:** Capability index (hash table by component capability) + version index (sorted by semantic version) + dependency index (hash table by dependency). Query cost: O(1) for capability lookup, O(log n) for version queries, O(1) for dependency queries.

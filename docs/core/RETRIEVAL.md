@@ -75,7 +75,7 @@ The effective domain set is the intersection of what the entity can access and w
 
 ### Step 3: Domain and Privacy Filter
 
-Query the memory and knowledge graphs with the effective constraints.
+Query the memory and knowledge artifacts with the effective constraints.
 
 ```
 Memory Query:
@@ -87,7 +87,7 @@ Knowledge Query:
     AND privacy_level <= effective_privacy_ceiling
 ```
 
-This step produces the candidate set — all memories and knowledge entries that pass the domain and privacy filters.
+This step produces the candidate set — all memory and knowledge artifacts that pass the domain and privacy filters.
 
 ### Step 4: Relationship Context Filter
 
@@ -144,8 +144,8 @@ Truncate to max_results
 
 ```
 ContextProjection
-├── memories: [MemoryEvent, ...]
-├── knowledge: [KnowledgeEntry, ...]
+├── memories: [MemoryArtifact, ...]
+├── knowledge: [KnowledgeArtifact, ...]
 ├── entities: [EntityDefinition, ...]          // loaded from Entity Graph
 ├── entity_states: [EntityState, ...]          // projected from event stream
 ├── channel: ChannelPolicy
@@ -157,7 +157,7 @@ ContextProjection
     └── control_authority: boolean
 ```
 
-This ContextProjection becomes the `context` field in the RPU request. Entity definitions are loaded from the Entity Graph; entity states are projected from the event stream.
+This ContextProjection becomes the `context` field in the RPU request. Entity definitions are loaded from the Entity Graph; entity states are projected from the event stream. Memory and knowledge artifacts are loaded from the artifact store.
 
 ---
 
@@ -177,8 +177,8 @@ interface RPURequest {
 }
 
 interface ContextProjection {
-	memories: MemoryEvent[];
-	knowledge: KnowledgeEntry[];
+	memories: MemoryArtifact[];
+	knowledge: KnowledgeArtifact[];
 	entities: EntityDefinition[]; // loaded from Entity Graph
 	entityStates: EntityState[]; // projected from event stream
 	channel: ChannelPolicy;
@@ -273,7 +273,7 @@ If entity is re-elevated and produces same patterns:
     -> new macros proposed with updated provenance
 ```
 
-Memories and events are never modified — they are the immutable shared substrate. Only derived artifacts (knowledge, macros) are invalidated.
+Events are never modified — they are the immutable shared substrate. Memory and knowledge artifacts are versioned; new versions are created when evidence changes the system's understanding. Only authored artifacts (knowledge, macros) are invalidated through permission changes.
 
 ---
 
@@ -300,7 +300,7 @@ Channels are responsible for their own caching of world-state projections. The r
 
 ## Cross-References
 
-- [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md) — Memory graph, knowledge graph, RPU contract
+- [TECHNICAL_CONCEPT.md](../TECHNICAL_CONCEPT.md) — Memory artifacts, knowledge artifacts, RPU contract
 - [ENTITIES.md](ENTITIES.md) — Entity permissions, trust levels
 - [CHANNELS.md](CHANNELS.md) — Channel policies, entity binding
 - [RPU.md](RPU.md) — RPU request/response schema

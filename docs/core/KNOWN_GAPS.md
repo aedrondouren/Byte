@@ -35,7 +35,7 @@ When a macro captures a plan artifact (because the repeating subgraph includes t
 
 ## Knowledge Extraction Rules (Section 8)
 
-The summarization pipeline describes the flow from situation model to narrative memories to validated knowledge, but the decision criteria for what crosses each threshold are underspecified. The document discusses confidence decay, temporal validity, and revision chains, but the actual extraction rules — what qualifies as knowledge versus preference versus temporary context — require further definition. This will likely emerge from implementation and testing rather than from theoretical design.
+The summarization pipeline describes the flow from situation model to memory artifacts to validated knowledge artifacts, but the decision criteria for what crosses each threshold are underspecified. The document discusses confidence decay, temporal validity, and revision chains, but the actual extraction rules — what qualifies as a knowledge artifact versus a preference versus a temporary context — require further definition. This will likely emerge from implementation and testing rather than from theoretical design.
 
 ### Privacy Inference Quality
 
@@ -43,18 +43,27 @@ The privacy inference mechanism (inferring privacy levels from "who is involved"
 
 ### Dual-Access Knowledge Enforcement
 
-The mechanism for separating factual content from contextual metadata at the projection level needs careful implementation. Ensuring that contextual metadata is consistently stripped when knowledge is accessed outside its originating relationship requires rigorous testing. A single leak could expose sensitive relationship information.
+The mechanism for separating factual content from contextual metadata at the artifact generation level needs careful implementation. Ensuring that contextual metadata is consistently stripped when knowledge artifacts are accessed outside their originating relationship requires rigorous testing. A single leak could expose sensitive relationship information.
 
 ### Knowledge Derived from Skills
 
-Knowledge entries extracted from skill execution traces carry provenance links. This introduces additional gaps:
+Knowledge artifacts extracted from skill execution traces carry provenance links. This introduces additional gaps:
 
-- **Provenance-weighted confidence decay** — when a skill is updated, knowledge derived from the old version enters accelerated decay. The decay rate multiplier (how much faster than normal decay) needs empirical tuning.
+- **Provenance-weighted confidence decay** — when a skill is updated, knowledge artifacts derived from the old version enter accelerated decay. The decay rate multiplier (how much faster than normal decay) needs empirical tuning.
 - **Cross-version knowledge reconciliation** — when the new skill produces a fact that contradicts the old version's derived knowledge, the reconciliation logic (supersede vs. coexist with validity windows) needs definition.
+
+### Memory Artifact Revision Mechanics
+
+Memory artifacts are versioned, not immutable. The mechanics of revision need further definition:
+
+- **Revision triggers** — what conditions cause a memory artifact to be revised? Contradictory evidence? Confidence decay? New context that changes interpretation? The threshold for creating a new version vs. adjusting confidence on the existing version needs definition.
+- **Version semantics** — when a memory is revised, does the new version replace the old in retrieval results, or do both coexist? How does `supersedes` work for memories vs. knowledge?
+- **Confidence mechanics** — how is confidence computed for memory artifacts? How does it decay? How does corroboration from multiple events increase confidence?
+- **Revision projection design** — revision projections read events + existing artifacts to produce new artifact versions. The design of these multi-source projections, their determinism classification, and their replay semantics need specification.
 
 ### Temporal Pattern Extraction
 
-The mechanism for extracting structured temporal patterns from narrative memory chains (Section 8.2.1) is defined conceptually but not algorithmically. How the summarization pipeline identifies consistent timing from irregular event sequences, how schedule expressions are normalized, and how confidence scores are assigned to extracted patterns all require further specification. The feedback loop (acceptance/denial → knowledge adjustment) is defined, but the initial extraction quality determines whether the loop converges or diverges.
+The mechanism for extracting structured temporal patterns from memory artifact chains (Section 8.2.1) is defined conceptually but not algorithmically. How the summarization pipeline identifies consistent timing from irregular event sequences, how schedule expressions are normalized, and how confidence scores are assigned to extracted patterns all require further specification. The feedback loop (acceptance/denial → knowledge adjustment) is defined, but the initial extraction quality determines whether the loop converges or diverges.
 
 ## Cold-Start Problem (Mitigated by Skills)
 

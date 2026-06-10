@@ -14,9 +14,9 @@ This document defines all terms used across the B.Y.T.E. architecture specificat
 
 **Trace IR** — The specific intermediate representation used for execution. Contains chain lineage, tool usage, reasoning steps, latency, retries, interruptions, macro usage, and priority context.
 
-**World-State Graph** — The unified conceptual model for runtime activity, operationally split into four logical graphs (perception, execution, memory, knowledge) stored in an append-only event store. State is derived by projecting event history.
+**World-State Graph** — The unified conceptual model for runtime activity, operationally split into two logical graphs (perception, execution) stored in an append-only event store. State is derived by projecting event history.
 
-**Artifact Version Store** — Content-addressed, semantically versioned, lifecycle-managed storage for macros, skills, code components, and entity definitions. State is the latest version per artifact. Cross-store references use content hashes in events pointing to artifact ID+version — no unified index needed.
+**Artifact Version Store** — Content-addressed, semantically versioned, lifecycle-managed storage for cognitive artifacts (memory, knowledge) and authored artifacts (macros, skills, code components, entity definitions). State is the latest version per artifact. Cross-store references use content hashes in events pointing to artifact ID+version — no unified index needed.
 
 ### Runtime Components
 
@@ -82,7 +82,7 @@ This document defines all terms used across the B.Y.T.E. architecture specificat
 
 **Temporal Intent** — Scheduled intent generated from knowledge entries carrying temporal patterns. Proposed by the RPU as a suggestion during the summarization pipeline, approved by the user, then executed as a deterministic cron-like entry by the kernel. Each tool service declares its own destructiveness level (read-only vs. state-changing); non-destructive entries may auto-execute once confidence crosses a configurable threshold, while destructive entries always require per-execution approval. User dismissal reduces confidence, leading to possible demotion back to "suggested" status.
 
-**Temporal Intent Generator** — A kernel component that manages the cron-like scheduling subsystem. Monitors the knowledge graph for active temporal patterns and produces intent events when scheduled conditions are met. The generator itself is deterministic — the RPU only assists in initial pattern detection and suggestion. Cron entries carry provenance back to the originating knowledge entry.
+**Temporal Intent Generator** — A kernel component that manages the cron-like scheduling subsystem. Monitors the knowledge artifacts for active temporal patterns and produces intent events when scheduled conditions are met. The generator itself is deterministic — the RPU only assists in initial pattern detection and suggestion. Cron entries carry provenance back to the originating knowledge artifact.
 
 ### Data Model
 
@@ -90,7 +90,7 @@ This document defines all terms used across the B.Y.T.E. architecture specificat
 
 **Provenance Chain** — The full causal lineage of an action, traceable from perception processing through world-state version, situation model generation, intent proposal, scheduler decision, and tool execution.
 
-**Projection** — A pure transformation function over an event stream that produces durable runtime state. Transforms graph state into graph state. Classified by determinism level: deterministic, probabilistic, and hybrid.
+**Projection** — A transformation function that consumes events and/or existing artifacts to produce new artifact versions. Classified by determinism level: deterministic, probabilistic, and hybrid. Revision projections consume events + existing artifacts to produce revised artifact versions, analogous to merge commits in Git.
 
 **Channel** — A bidirectional boundary between the runtime and the outside world. Transforms graph state into external representation and translates external inputs back into events. Leaves in the transformation pipeline.
 
@@ -106,11 +106,13 @@ This document defines all terms used across the B.Y.T.E. architecture specificat
 
 **Signal-to-Intent Pipeline** — The three-layer process that converts raw sensor streams into actionable intent: perception processing, situation model generation, and intent estimation.
 
-**Summarization Pipeline** — The downstream pipeline that converts situation model into narrative memories and validated knowledge. Makes the two-store, eight-graph model operationally viable by reducing volume while preserving signal.
+**Summarization Pipeline** — The downstream pipeline that converts situation model into memory artifacts and validated knowledge artifacts. Makes the two-store, eight-graph model operationally viable by reducing volume while preserving signal.
 
-**Narrative Memory** — A consolidated experience indexed for long-term recall. A sequence of situation model compressed into a retrievable memory unit.
+**Memory Artifact** — A versioned, content-addressed representation of an experienced event or sequence of events. Carries metadata: subjects, origin channel, topic, privacy classification, relationship context, domain tags, confidence, provenance to source events, and supersedes links to previous versions. Stored in the artifact version store. Previous versions remain accessible for audit and replay.
 
-**Knowledge Validation** — The process by which proposed facts become validated knowledge. Requires corroboration across independent events, contradiction detection, confidence scoring, and consistency checks.
+**Knowledge Artifact** — A versioned, content-addressed representation of a validated fact or pattern. Carries temporal validity windows, confidence scores, revision chains, and dual access levels (factual content + scoped contextual metadata). Stored in the artifact version store. Supersedes previous versions when contradicted.
+
+**Knowledge Validation** — The process by which proposed facts become validated knowledge artifacts. Requires corroboration across independent events, contradiction detection, confidence scoring, and consistency checks.
 
 ### Entity Model
 

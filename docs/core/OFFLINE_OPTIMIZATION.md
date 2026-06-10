@@ -54,25 +54,35 @@ Reads from artifact version store, writes to artifact version store. The offline
 
 ### Knowledge Validation (Phase 4)
 
-Reads from world-state event store, writes to world-state event store. Proposed facts from the summarization pipeline are tested against accumulated evidence. Contradiction detection, consistency checks, and confidence scoring run as batch processes.
+Reads from world-state event store and memory artifacts, writes to artifact version store. Proposed facts from the summarization pipeline are tested against accumulated evidence. Contradiction detection, consistency checks, and confidence scoring run as batch processes. Validated facts become knowledge artifacts with version, confidence, and validity windows.
 
 ### Skill Version Impact Analysis (Phase 5)
 
-Reads from both stores, writes to both stores. When a skill is updated, the offline loop re-validates all derived artifacts:
+Reads from both stores, writes to artifact version store. When a skill is updated, the offline loop re-validates all derived artifacts:
 
 1. Identifies all macros with provenance to the old skill version.
 2. Replays them against execution traces from the new skill version.
 3. Proposes new macro versions with updated provenance if behavior is equivalent.
-4. Identifies all knowledge entries with provenance to the old skill version.
-5. Accelerates confidence decay for entries not corroborated by new skill executions.
+4. Identifies all knowledge artifacts with provenance to the old skill version.
+5. Accelerates confidence decay for artifacts not corroborated by new skill executions.
+6. Identifies all memory artifacts derived from skill execution and flags for review.
 
 ### Temporal Schedule Refinement (Phase 4)
 
-Reads from world-state event store, writes to world-state event store. Recurring schedules are adjusted based on observed behavior — shifting timing to better match actual usage patterns, merging overlapping schedules, and pruning schedules whose underlying knowledge has decayed below the activation threshold.
+Reads from world-state event store and knowledge artifacts, writes to artifact version store. Recurring schedules are adjusted based on observed behavior — shifting timing to better match actual usage patterns, merging overlapping schedules, and pruning schedules whose underlying knowledge has decayed below the activation threshold.
+
+### Memory Revision (Phase 4)
+
+Reads from world-state event store and existing memory artifacts, writes to artifact version store. The offline loop identifies memory artifacts that may need revision based on new evidence:
+
+1. Scans recent events for experiences that contradict or update existing memory artifacts.
+2. Evaluates confidence changes based on corroboration or contradiction.
+3. Proposes revised memory artifact versions with updated confidence, content, and supersedes links.
+4. Applies confidence decay to memory artifacts that have not been corroborated over time.
 
 ### Background Indexing and Refinement (Phase 4)
 
-Reads from and writes to world-state event store. Memory and knowledge graph indexes are rebuilt with improved algorithms. Semantic similarity indexes are updated as new experiences accumulate.
+Reads from and writes to artifact version store. Memory and knowledge artifact indexes are rebuilt with improved algorithms. Semantic similarity indexes are updated as new experiences accumulate. Version indexes are maintained for efficient latest-version lookup.
 
 ### Dataset Generation (Phase 4)
 
@@ -89,10 +99,10 @@ Reads from world-state event store, writes to entity registry. The offline loop 
 
 ### Permission-Impact Analysis (Phase 5)
 
-Reads from both stores, writes to both stores. When entity permissions change, the offline loop identifies and invalidates affected derived artifacts:
+Reads from both stores, writes to artifact version store. When entity permissions change, the offline loop identifies and invalidates affected derived artifacts:
 
-1. Identifies all knowledge entries where `learned_from` == changed entity.
-2. Applies accelerated confidence decay to affected knowledge entries.
+1. Identifies all knowledge artifacts where `learned_from` == changed entity.
+2. Applies accelerated confidence decay to affected knowledge artifacts.
 3. Identifies all macros derived from changed entity's execution.
 4. Demotes affected macros (status: `source_permission_changed`).
 5. If entity is re-elevated, flags affected artifacts for re-validation.

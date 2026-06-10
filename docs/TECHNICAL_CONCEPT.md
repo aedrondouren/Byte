@@ -6,7 +6,7 @@
 
 ## Abstract
 
-This document describes B.Y.T.E. (Behavior Yielding Through Evolution), a distributed, event-sourced cognitive runtime architecture that unifies perception, reasoning, and action through a Git-like world-state graph. The system tests a single hypothesis: **can accumulated structure substitute for repeated inference?** Instead of improving AI agents through larger models or more context, the architecture converts past reasoning into reusable structure — macros and knowledge graphs — so that the minimum reasoning required to achieve a task decreases over time. A companion code registry provides tested, versioned components for software development tasks. The core thesis is falsifiable: if Phase 4 (Memory + Knowledge) does not demonstrate a measurable reduction in reasoning cost for equivalent outcomes, the project fails. This document defines the complete target architecture. Implementation has not yet begun.
+This document describes B.Y.T.E. (Behavior Yielding Through Evolution), a distributed, event-sourced cognitive runtime architecture that unifies perception, reasoning, and action through a Git-like world-state graph. The system tests a single hypothesis: **can accumulated structure substitute for repeated inference?** Instead of improving AI agents through larger models or more context, the architecture converts past reasoning into reusable structure — memory artifacts, knowledge artifacts, and macros — so that the minimum reasoning required to achieve a task decreases over time. A companion code registry provides tested, versioned components for software development tasks. The core thesis is falsifiable: if Phase 4 (Memory + Knowledge) does not demonstrate a measurable reduction in reasoning cost for equivalent outcomes, the project fails. This document defines the complete target architecture. Implementation has not yet begun.
 
 ---
 
@@ -86,8 +86,8 @@ The decay mechanisms are intentional: they prevent the system from accumulating 
 These principles govern every design decision:
 
 - **AI proposes intent; the kernel executes deterministically.** The LLM never runs the system. It proposes structured intent into the execution kernel, which validates, schedules, and executes it using deterministic primitives.
-- **Everything is an event.** There is no distinction between input and output. Sensor readings, tool calls, reasoning steps, execution chains, and environmental state are all events in the same structure.
-- **The world-state is an immutable event graph, not a mutable database.** Events are append-only, content-addressed, and cryptographically verifiable. Current state is always a projection of history.
+- **Everything that happened is an event.** Sensor readings, tool calls, reasoning steps, execution chains, and environmental state are all events in the same structure. What the system currently believes — memories, knowledge — are versioned artifacts produced by projections over those events.
+- **The world-state is an immutable event graph, not a mutable database.** Events are append-only, content-addressed, and cryptographically verifiable. Current reality is continuously updated from event history and artifact history.
 - **Execution chains are persistent, prioritized, and interruptible.** Chains survive waiting, suspension, and resumption. They are governed by priority levels and resource quotas.
 - **Macros are compiled execution subgraphs, not behavior overrides.** Repeated execution patterns are discovered, validated, and compiled into reusable units. They never replace primitives. Macros may be derived from skill execution traces (carrying provenance links) or discovered from general execution patterns. Macros may compose child macros hierarchically as DAG subgraph references.
 - **Skills are optional seed behaviors; derived artifacts carry provenance.** Macros and knowledge extracted from skill execution traces maintain causal links to their source skill and version. When a skill is updated, derived artifacts are flagged for re-validation through the existing demotion mechanics. Skills use the existing harness format — users install skills they trust; the system optimizes them automatically. The system operates without any skills installed, accumulating structure from its own organic execution.
@@ -98,10 +98,10 @@ These principles govern every design decision:
 - **Graceful degradation is mandatory.** The system must remain functional and safe when disconnected from the homelab, when network links fail, or when sensor inputs become unreliable.
 - **Admin is the root of trust.** A single Admin entity exists from bootstrap, linked to the primary webUI. All other entities start untrusted. Trust is never automatic — it is explicitly granted by a higher-trust entity.
 - **Admin ceiling is irrevocable.** No permission delegation chain can produce effective permissions equal to or greater than Admin. Admin is always the ceiling.
-- **Memory is not owned by entities.** All memory lives in the shared graph with metadata describing context. Entities are retrieval policy definitions, not memory containers.
-- **History is immutable; derivatives are invalidated.** Memories and events are never modified. Knowledge and macros are invalidated when source entity permissions change.
+- **Memory is not owned by entities.** All memory lives in the shared artifact store with metadata describing context. Entities are retrieval policy definitions, not memory containers.
+- **Events are immutable; cognitive artifacts are versioned.** Events are never modified. Memory and knowledge artifacts accumulate versions — previous versions remain accessible for audit and replay.
 - **Privacy is structural.** Inferred from who is involved and what the memory concerns, encoded as metadata that survives abstraction into knowledge.
-- **Knowledge propagates; context remains scoped.** Factual knowledge can become globally accessible while relationship and provenance context stays bound to the originating entity relationship.
+- **Knowledge propagates; context remains scoped.** Factual knowledge content can become globally accessible while relationship and provenance context stays bound to the originating entity relationship.
 - **Channels are bidirectional but control-gated.** All channels produce and consume events. Control signal authority requires explicit enablement (default: disabled).
 - **Everything is permission-based.** Domains, tools, sensors, control signals — all access is gated by entity permissions enforced by the kernel.
 
@@ -109,7 +109,7 @@ These principles govern every design decision:
 
 An **Entity** is any persistent thing that can participate in events. Examples include internal agent personas, administrative users, general users, pets, physical objects, locations, and groups.
 
-Entities are lightweight graph nodes with relationships and metadata, not containers for isolated memories. The runtime maintains a single immutable history and a unified knowledge graph from which multiple entity-specific projections are derived.
+Entities are lightweight graph nodes with relationships and metadata, not containers for isolated memories. The runtime maintains a single immutable history and a unified knowledge artifact store from which multiple entity-specific projections are derived.
 
 **Entity definitions** (identity, trust level, permissions, relationships) are stored as versioned artifacts in the **Entity Graph** within the artifact version store. **Entity state** (last seen, interaction count, derived preferences) is a projection over the world-state event stream. The complete entity view combines both:
 
@@ -140,29 +140,31 @@ The Admin entity exists from system bootstrap, pre-linked to the primary webUI s
 
 The eight logical graphs are split across two data stores, reflecting two fundamentally different data models.
 
-**World-State Event Store** — append-only, content-addressed events. State is derived by projecting event history. Four graphs share this store:
+**World-State Event Store** — append-only, content-addressed events. State is derived by projecting event history. Two graphs share this store:
 
 ```
 World-State Event Store (append-only, content-addressed)
 ├── Perception projection  ── what happened
-├── Execution projection   ── what was done
-├── Memory projection      ── what was experienced
-└── Knowledge projection   ── what is known
+└── Execution projection   ── what was done
 ```
 
-**Artifact Version Store** — content-addressed, semantically versioned, lifecycle-managed. State is the latest version per artifact. Four graphs use this store:
+**Artifact Version Store** — content-addressed, semantically versioned, lifecycle-managed. State is the latest version per artifact. Six graphs use this store:
 
 ```
 Artifact Version Store (content-addressed, semantically versioned)
-├── Macro Graph     ── compiled execution patterns
-├── Skill Registry  ── pre-authored behavior definitions
-├── Code Registry   ── tested code components
-└── Entity Graph    ── identity & permissions definitions
+├── Memory Graph      ── what was experienced (versioned artifacts)
+├── Knowledge Graph   ── what is known (versioned artifacts)
+├── Macro Graph       ── compiled execution patterns
+├── Skill Registry    ── pre-authored behavior definitions
+├── Code Registry     ── tested code components
+└── Entity Graph      ── identity & permissions definitions
 ```
 
-Each store maintains its own indexing strategy, retention policies, and query patterns. Cross-store references use content hashes in events pointing to artifact ID+version — no unified index is needed. An event in the world-state store references an artifact like `macro_used: macro_weather_check:v3.1.0`. An artifact in the version store references events for provenance like `provenance: { source_events: [evt_abc, evt_def, ...] }`.
+Each store maintains its own indexing strategy, retention policies, and query patterns. Cross-store references use content hashes in events pointing to artifact ID+version — no unified index is needed. An event in the world-state store references an artifact like `memory_created: memory_abc:v1` or `macro_used: macro_weather_check:v3.1.0`. An artifact in the version store references events for provenance like `provenance: { source_events: [evt_abc, evt_def, ...] }`.
 
-The separation reflects that world-state graphs are projections of lived experience (events), while artifact graphs are versioned entities the system creates, manages, and evolves over time. The Entity Graph stores entity definitions as versioned artifacts — identity, trust, permissions, and relationships — while entity state (derived from events involving that entity) remains a projection over the event stream. Known entity definitions persist even when demoted, preserving accumulated identity and relationship context.
+The separation reflects three classes of data: **events** (immutable evidence of what happened), **cognitive artifacts** (versioned interpretations the system currently believes — memory and knowledge), and **authored artifacts** (versioned entities the system creates and manages — macros, skills, code, entity definitions). Memory and knowledge are produced by projections over events and existing artifacts; they are not themselves events. They have versions, confidence, lineage, and can be superseded — artifact semantics, not event semantics.
+
+The Entity Graph stores entity definitions as versioned artifacts — identity, trust, permissions, and relationships — while entity state (derived from events involving that entity) remains a projection over the event stream. Memory and Knowledge follow the same pattern: memory evidence and knowledge evidence live as events in the event store, while memory artifacts and knowledge artifacts are versioned interpretations produced by projections over that evidence.
 
 → See [GRAPH.md](./core/GRAPH.md#one-line-architecture-summary) for visual diagrams and design review heuristics.
 
@@ -180,7 +182,7 @@ The system improves over time through accumulated structure, but the initial per
 
 1. **Phase 4 Day 1:** The system loads installed skills (if any) and executes them through the RPU. Skills provide competent behavior in their domains; default personality parameters handle everything else. Memory and knowledge systems are active but empty.
 2. **Phase 4 Week 1:** Narrative memories begin accumulating. Skill execution traces (or general execution traces if no skills) provide the first structured data for macro discovery.
-3. **Phase 4 Month 1:** Validated knowledge begins entering the knowledge graph. Temporal patterns emerge from memory chains. Skills now execute with meaningful context from memory and knowledge.
+3. **Phase 4 Month 1:** Validated knowledge begins entering the knowledge artifact store. Temporal patterns emerge from memory artifact chains. Skills now execute with meaningful context from memory and knowledge.
 4. **Phase 5 Month 3+:** The compression loop is operational. Skill-derived macros handle frequent skill-based tasks deterministically. Pattern-derived macros handle general repeated behaviors. Knowledge eliminates re-derivation. The system's reasoning cost per task begins to measurably decrease.
 
 **Cold-start mitigation strategies:**
@@ -188,7 +190,7 @@ The system improves over time through accumulated structure, but the initial per
 - **Skills in existing harness format (optional)** provide competent behavior from Phase 4. Users install skills they trust; the system executes them with full reasoning. No new format to learn, no migration required. Skills can be installed at any time — during initial setup, or later as the user discovers new needs. The system may also suggest skills based on observed behavior patterns that match available skill capabilities.
 - **Default personality parameters** provide reasonable behavior for tasks not covered by installed skills. The personality evolves as experience accumulates.
 - **Pre-built knowledge templates** (optional) can bootstrap common knowledge domains (user preferences, common facts) to accelerate early learning.
-- **User onboarding** can explicitly teach the system key preferences and patterns, jump-starting the knowledge graph.
+- **User onboarding** can explicitly teach the system key preferences and patterns, jump-starting the knowledge artifacts.
 - **The evaluation baseline (Phase 2) is measured during the cold-start period.** This ensures that the thesis is tested from the worst-case starting point, not from a pre-loaded state. Skills are not part of the thesis test.
 
 The cold-start period is not a flaw — it is the natural consequence of a system that learns from experience. Skills accelerate the early phase but do not change the fundamental learning curve. The evaluation methodology (Section 16) measures improvement from this baseline, not from an idealized pre-loaded state.
@@ -266,17 +268,21 @@ Conceptually the world-state is unified. Operationally the system uses eight log
 
 #### 4.1.1 World-State Graphs (Event Store)
 
-These four graphs are projections of the append-only event stream. Current state is derived by replaying events.
+These two graphs are projections of the append-only event stream. Current state is derived by replaying events.
 
 **Perception Graph** — structured perception from signal processing systems, environmental facts, user state, biometrics. Answers "what is happening in the world." Contains the outputs of object detection, speech-to-text, attention tracking, movement analysis, and cognitive state processing. These are the first entries in the graph — raw sensor streams never enter.
 
 **Execution Graph** — chains, tasks, scheduling decisions, tool calls, RPU invocations. Answers "what is the system doing." Contains execution chain lifecycle, scheduler decisions, tool call records, RPU request/response pairs, and state transitions.
 
-**Memory Graph** — episodic experiences, emotional context, narrative memories, personality evolution, relationship state. Answers "what has been experienced." Retrieved by similarity, temporal proximity, and emotional valence. Evolves as new experiences accumulate and context shifts.
+#### 4.1.2 Cognitive Artifact Graphs (Version Store)
 
-**Knowledge Graph** — validated facts, semantic knowledge, tested relationships, established patterns. Answers "what is known to be true." Retrieved by semantic query. Facts must pass a validation pipeline before becoming knowledge. Knowledge carries temporal validity, confidence decay, and revision chains — it is durable but not final. Also serves as the source for temporal intent generation when knowledge carries explicit temporal patterns.
+These two graphs are versioned interpretations produced by projections over events and existing artifacts. Current state is the latest version per artifact.
 
-#### 4.1.2 Artifact Graphs (Version Store)
+**Memory Graph** — episodic experiences, emotional context, narrative memories, personality evolution, relationship state. Answers "what has been experienced." Retrieved by similarity, temporal proximity, and emotional valence. Memory artifacts are versioned — new evidence or contradictions produce new versions while preserving history. Each memory carries metadata: subjects, origin channel, topic, privacy classification, relationship context, domain tags, and provenance to source events.
+
+**Knowledge Graph** — validated facts, semantic knowledge, tested relationships, established patterns. Answers "what is known to be true." Retrieved by semantic query. Facts must pass a validation pipeline before becoming knowledge. Knowledge artifacts carry temporal validity, confidence decay, and revision chains — they are durable but not final. Knowledge entries supersede previous versions when contradicted, preserving the full revision history. Also serves as the source for temporal intent generation when knowledge carries explicit temporal patterns.
+
+#### 4.1.3 Authored Artifact Graphs (Version Store)
 
 These three graphs are versioned entities with semantic versioning and lifecycle management. Current state is the latest version per artifact.
 
@@ -286,7 +292,7 @@ These three graphs are versioned entities with semantic versioning and lifecycle
 
 **Code Registry Graph** — versioned, tested code components that the model and agents draw from when writing software with users. Not executed by the runtime; used to compose new programs. Components are actively authored by the model, agents, or the user. A mandatory test pipeline validates before adoption. Answers "what code exists, what version is current, and whether it passes tests."
 
-#### 4.1.3 Entity Graph (Version Store)
+#### 4.1.4 Entity Graph (Version Store)
 
 The Entity Graph stores **entity definitions** — versioned, content-addressed artifacts describing identity, trust level, permissions, and relationships for every participant in the system. Entity definitions are distinct from entity state: the definition is a versioned artifact that changes through discrete actions; the state is a projection over the world-state event stream.
 
@@ -333,36 +339,41 @@ Artifacts in the version store follow a different model: they are versioned enti
 
 For world-state graphs, current state is derived from replaying events. State is a materialized view, not the source of truth. Checkpoints accelerate reconstruction but do not replace history. The system can always rebuild current world-state from the full event log.
 
-For artifact graphs, current state is the latest version of each artifact. The artifact store maintains version metadata (current version, lifecycle status, semantic tags) that determines which version is active. Artifact versions are immutable once published; state changes occur through version creation, not modification.
+For cognitive artifact graphs (memory, knowledge), current state is the latest version of each artifact. Artifacts are produced by projections over events and existing artifacts. Previous versions remain accessible for audit and replay.
+
+For authored artifact graphs, current state is the latest version of each artifact. The artifact store maintains version metadata (current version, lifecycle status, semantic tags) that determines which version is active. Artifact versions are immutable once published; state changes occur through version creation, not modification.
 
 ### 4.5 Projections and Channels
 
 The runtime distinguishes between two categories of transformation over the event graph:
 
-**Projections** transform graph state into graph state. They are internal runtime transformations that produce durable, queryable, composable knowledge structures. A projection is a pure function over an event stream:
+**Projections** consume events and/or existing artifacts to produce new artifact versions. They are internal runtime transformations that produce durable, queryable, composable knowledge structures. A projection is a transformation function:
 
 ```
-Graph → Projection → Graph
+(Events, Artifacts) → Projection → Artifact Version
 ```
+
+Projections may read from the event store, the artifact store, or both. They always write to the artifact store. Projections that produce cognitive artifacts (memory, knowledge) may revise existing artifacts based on new evidence, creating new versions.
 
 Examples:
 
 ```
-Perception → Perception Graph          (world-state event store)
-Perception Graph → Situation Model     (world-state event store)
-Situation Model + User Signals → Intent (world-state event store)
-Intent → Execution Graph               (world-state event store)
-Execution Graph → Memory Graph         (world-state event store)
-Memory Graph → Knowledge Graph         (world-state event store)
-Execution Graph → Macro Graph          (artifact version store, via discovery pipeline)
+Perception → Perception Graph              (world-state event store, evidence events)
+Perception Graph → Situation Model         (world-state event store, evidence events)
+Situation Model + User Signals → Intent    (world-state event store, evidence events)
+Intent → Execution Graph                   (world-state event store, evidence events)
+Execution Graph → Memory Artifact          (artifact version store, via memory extraction)
+Memory Artifact → Knowledge Artifact       (artifact version store, via knowledge generalization)
+Execution Graph → Macro Graph              (artifact version store, via discovery pipeline)
 Skill Execution → Execution Graph → Macro Graph (artifact version store, skill-derived)
-Skill Execution → Execution Graph → Knowledge Graph (world-state event store, skill-derived)
-Event Stream → Entity State Projection (world-state event store, derived state per entity)
+Skill Execution → Execution Graph → Knowledge Artifact (artifact version store, skill-derived)
+Event Stream → Entity State Projection     (computed state, not stored as artifact)
+Memory Artifact v1 + New Evidence → Memory Artifact v2 (artifact revision)
 ```
 
-Projections that write to the world-state event store produce events. Projections that write to the artifact version store produce artifact versions. The discovery pipeline (Section 9.1) reads from the world-state event store and writes to the artifact version store when proposing new macro versions. The entity state projection reads from the world-state event store and produces derived state for each known entity — this state is not stored as an artifact but is computed on demand or cached.
+Projections that write evidence events to the world-state event store produce events. Projections that write to the artifact version store produce artifact versions. The discovery pipeline (Section 9.1) reads from the world-state event store and writes to the artifact version store when proposing new macro versions. The memory extraction pipeline reads from the world-state event store and writes memory artifacts to the artifact version store. The knowledge generalization pipeline reads memory artifacts and events, and writes knowledge artifacts to the artifact version store. The entity state projection reads from the world-state event store and produces derived state for each known entity — this state is not stored as an artifact but is computed on demand or cached.
 
-Projections optimize for correctness, queryability, persistence, and composition. They can be chained — the output of one projection becomes the input of another. The summarization pipeline (section 8) is a chain of projections: situation model into narrative memories, into validated knowledge.
+Projections optimize for correctness, queryability, persistence, and composition. They can be chained — the output of one projection becomes the input of another. The summarization pipeline (section 8) is a chain of projections: events into memory artifacts, memory artifacts into knowledge artifacts.
 
 **Channels** transform graph state into external representation and translate external inputs back into events. They are bidirectional boundaries between the runtime and the outside world. All channels are bidirectional — they both produce events into the system and consume projected views from it. The primary orientation (input vs. output) determines the dominant flow, but both directions are always available.
 
@@ -409,6 +420,10 @@ Projections are classified by their determinism level. This classification gover
 
 This classification matters for debugging. When state is incorrect, the projection type determines the investigation path: deterministic projections are debugged by replaying input; probabilistic projections are debugged by examining evidence trails and confidence scores; hybrid projections are debugged by isolating which stage produced the error.
 
+**Source dimension.** Projections also differ by what they consume. Some projections read only events (perception processing, execution graph derivation, memory extraction). Others read events and existing artifacts (knowledge generalization from memory artifacts, memory revision from new evidence). Revision projections — those that read an existing artifact and new evidence to produce a revised artifact version — are typically hybrid on both axes: they combine deterministic and probabilistic stages, and they consume from multiple sources (events + artifacts). This makes them the most complex projection type, analogous to a merge commit in Git.
+
+**Source dimension.** Projections also differ by what they consume. Some projections read only events (perception processing, execution graph derivation). Others read events and existing artifacts (memory revision, knowledge generalization). Revision projections — those that read an existing artifact and new evidence to produce a revised artifact version — are typically hybrid on both axes: they combine deterministic and probabilistic stages, and they consume from multiple sources (events + artifacts). This makes them the most complex projection type, analogous to a merge commit in Git.
+
 ### 4.6 DAG Structure
 
 The graph is a DAG, not a linear chain. Multiple chains execute concurrently. Reasoning can fork. Execution paths can merge. Lineage is preserved across all branches. Execution chains behave like branches — long-running tasks become branches of execution that can pause, resume, fork, merge, or terminate. The scheduler determines which branches receive resources.
@@ -423,7 +438,7 @@ The goal is not distributed consensus. The goal is tamper-evident history, causa
 
 ### 4.9 Entity Model and Memory Scoping
 
-An **Entity** is any persistent thing that can participate in events. Entities are lightweight graph nodes with identity, relationships, and permissions — not memory containers. All memory lives in the shared graph with metadata describing context.
+An **Entity** is any persistent thing that can participate in events. Entities are lightweight graph nodes with identity, relationships, and permissions — not memory containers. All memory lives in the shared artifact store with metadata describing context.
 
 **Entity definitions** (identity, trust level, permissions, relationships) are stored as versioned artifacts in the **Entity Graph** within the artifact version store. **Entity state** (last seen, interaction count, derived preferences) is a projection over the world-state event stream. The complete entity view at runtime combines the definition from the Entity Graph with state projected from events, bound to a specific channel:
 
@@ -442,23 +457,25 @@ The Admin entity exists from system bootstrap, pre-linked to the primary webUI. 
 Memory does not belong to an entity. Instead, it carries metadata describing its context:
 
 ```
-Memory
+Memory Artifact
 ├── Subject(s) — which entities are involved
 ├── Origin Channel — where it came from
 ├── Topic — what it concerns
 ├── Privacy Classification — inferred from who and what
 ├── Relationship Context — which relationship it exists within
+├── Version — semantic version, with supersedes links
+├── Confidence — confidence score
 └── Domain Tags — technical, project, research, interaction, relationship, personal, private, credentials
 ```
 
-Privacy is inferred from the structure of memory: who is involved and what the memory concerns. This information becomes part of memory metadata and survives abstraction into knowledge.
+Privacy is inferred from the structure of memory artifacts: who is involved and what the memory concerns. This information becomes part of memory artifact metadata and survives abstraction into knowledge artifacts.
 
-Knowledge carries dual access levels: factual content (globally accessible when domain permissions allow) and contextual metadata (scoped to the originating relationship). This prevents accidental leakage of contextual information while allowing useful abstractions to propagate.
+Knowledge artifacts carry dual access levels: factual content (globally accessible when domain permissions allow) and contextual metadata (scoped to the originating relationship). This prevents accidental leakage of contextual information while allowing useful abstractions to propagate.
 
 Retrieval is the intersection of multiple filters:
 
 ```
-Candidate Memory
+Candidate Memory/Knowledge Artifact
     ∩ Entity Policy (accessible domains, privacy levels)
     ∩ Channel Policy (allowed/blocked domains, privacy ceiling)
     ∩ Memory Domain (task-relevant domains)
@@ -617,7 +634,7 @@ Personality is stored as structured data rather than prompt text. The trait-vect
 }
 ```
 
-Personality is composed of traits, preferences, communication style, values, relationship state, and interaction history. All of these are projections of accumulated events in the memory graph — personality evolves as the system accumulates experience, not through manual configuration.
+Personality is composed of traits, preferences, communication style, values, relationship state, and interaction history. All of these are projections of accumulated events and memory artifacts — personality evolves as the system accumulates experience, not through manual configuration.
 
 The runtime owns personality. The RPU consumes personality projections. This allows model replacement, personality versioning, personality evolution, and consistent behavior across backends.
 
@@ -786,7 +803,7 @@ Example commit (kernel decision):
 
 Because perception is preserved in the event log, the entire downstream pipeline can be reprocessed. Situation model generation can be re-run with better models. Intent estimation can be re-evaluated with improved context understanding. This enables continuous system improvement without losing historical data.
 
-The offline optimization loop (section 14) reprocesses historical perception to generate improved situation model and intent, which updates the memory and knowledge graphs without modifying the immutable perception log.
+The offline optimization loop (section 14) reprocesses historical perception to generate improved situation model and intent, which updates the memory and knowledge artifacts without modifying the immutable perception log.
 
 ### 7.5 Perception Uncertainty Propagation
 
@@ -815,18 +832,20 @@ Perception processing uses probabilistic models (object detection, speech-to-tex
 
 The signal-to-intent pipeline (section 7) produces perception, situation model, and intent at high frequency. The summarization pipeline operates downstream of intent, converting accumulated experience into progressively more compact and meaningful representations suitable for long-term storage and retrieval.
 
-Without summarization, the system would drown in accumulated experience. The summarization pipeline converts high-volume situation model into progressively more compact narrative memories and validated knowledge.
+Without summarization, the system would drown in accumulated experience. The summarization pipeline converts high-volume situation model into progressively more compact memory artifacts and validated knowledge artifacts.
 
 ### 8.1 Summarization Pipeline
 
 The event log is the complete, unfiltered record of all perception, situation model, intent, execution, and system state transitions. This layer is append-only and immutable. It is the source of truth but not a query surface.
 
-Narrative memories are consolidated experiences indexed for long-term recall. A sequence of situation model from a trip becomes "visited location Y, encountered situation Z, took action W, outcome was positive." Narrative memories carry temporal and contextual metadata — frequency, timing, conditions — that enables temporal pattern extraction during knowledge validation. Narrative memories populate the memory graph and serve as context for future RPU invocations.
+Memory artifacts are consolidated experiences indexed for long-term recall. A sequence of situation model from a trip becomes "visited location Y, encountered situation Z, took action W, outcome was positive." Memory artifacts carry temporal and contextual metadata — frequency, timing, conditions — that enables temporal pattern extraction during knowledge validation. Memory artifacts populate the Memory Graph and serve as context for future RPU invocations. Memory artifacts are versioned: new evidence or contradictions produce new versions while preserving history.
 
-Every memory carries explicit metadata describing its context:
+Every memory artifact carries explicit metadata describing its context:
 
 ```
-Memory
+Memory Artifact
+├── id: content-addressed hash
+├── version: semantic version
 ├── content: the memory content
 ├── subjects: [entity_id, ...]           // which entities are involved
 ├── origin_channel: channel_id            // where it came from
@@ -834,7 +853,9 @@ Memory
 ├── privacy: public | restricted | private | confidential
 ├── relationship_context: entity_id       // which relationship it exists within
 ├── domains: [domain, ...]                // technical, project, research, interaction, relationship, personal, private, credentials
-├── derived_from: event_hash              // provenance to source event
+├── derived_from: event_hash              // provenance to source events
+├── supersedes: [memory_id, ...]          // previous versions this replaces
+├── confidence: float                     // confidence score
 └── knowledge_provenance: { ... }         // if generalized, who it was learned from
 ```
 
@@ -849,38 +870,38 @@ origin_channel=public_stream -> public (floor)
 
 Admin can override inferred privacy levels.
 
-Validated knowledge is extracted from situation model and narrative memories through corroboration, testing against conflicting evidence, and consistency checks. A fact becomes knowledge only when it survives repeated validation across independent events. Facts are held in a "hypothesis" state when contradictory evidence exists. Once a fact reaches sufficient confidence, it enters the knowledge graph.
+Knowledge artifacts are extracted from situation model and memory artifacts through corroboration, testing against conflicting evidence, and consistency checks. A fact becomes knowledge only when it survives repeated validation across independent events. Knowledge artifacts are held in a "hypothesis" state when contradictory evidence exists. Once a fact reaches sufficient confidence, it enters the knowledge graph as a versioned artifact.
 
 Knowledge carries **dual access levels**: factual content (globally accessible when domain permissions allow) and contextual metadata (scoped to the originating relationship). When knowledge is accessed by the originating entity, both factual content and contextual metadata are returned. When accessed by a different entity with matching domain permissions, only the factual content is returned — the contextual metadata (who taught this, under what relationship) is stripped or anonymized. This prevents accidental leakage of contextual information while allowing useful abstractions to propagate.
 
-The pipeline is itself a chain of projections. Each stage — situation model to narrative memories, narrative memories to validated knowledge — is a projection transforming graph state into graph state.
+The pipeline is itself a chain of projections. Each stage — events into memory artifacts, memory artifacts into knowledge artifacts — is a projection producing new artifact versions.
 
 ### 8.2 Knowledge Time Semantics
 
-Knowledge is not final. It carries temporal semantics:
+Knowledge artifacts are not final. They carry temporal semantics:
 
-**Temporal validity** — knowledge is valid within a time window. "User prefers Rust" may be true for a project phase but not indefinitely. Knowledge entries carry `valid_from` and `valid_until` timestamps. When `valid_until` passes without corroboration, confidence decays.
+**Temporal validity** — knowledge is valid within a time window. "User prefers Rust" may be true for a project phase but not indefinitely. Knowledge artifacts carry `valid_from` and `valid_until` timestamps. When `valid_until` passes without corroboration, confidence decays.
 
 **Confidence decay** — knowledge that is not corroborated over time loses confidence. The decay rate depends on the knowledge domain: technical facts decay slowly, social facts decay faster, environmental facts decay fastest. When confidence drops below the acceptance threshold, knowledge reverts to hypothesis status.
 
-**Revision chains** — when knowledge is contradicted, the old version is not deleted. It is superseded by a new version with a causal link to the contradiction. The full revision history is preserved in the knowledge graph, following the same Git-like versioning model as all other graphs. A fact can be true at time T and false at time T+1 — both versions coexist with temporal validity windows.
+**Revision chains** — when knowledge is contradicted, the old version is not deleted. It is superseded by a new version with a causal link to the contradiction. The full revision history is preserved in the knowledge graph, following the same Git-like versioning model as all other artifacts. A fact can be true at time T and false at time T+1 — both versions coexist with temporal validity windows.
 
 ### 8.2.1 Temporal Patterns
 
-Knowledge entries can carry explicit temporal patterns derived from memory chains. When lived experience shows consistent timing — the user asks for weather every morning, checks email after lunch, or has a recurring meeting — the summarization pipeline extracts these patterns into structured temporal expressions.
+Knowledge artifacts can carry explicit temporal patterns derived from memory artifact chains. When lived experience shows consistent timing — the user asks for weather every morning, checks email after lunch, or has a recurring meeting — the summarization pipeline extracts these patterns into structured temporal expressions.
 
-**Recurring patterns** — behaviors that repeat on a schedule. Derived from memory chains where the same behavior appears at consistent times or under consistent conditions. A knowledge entry for "user checks weather daily at ~7 AM" carries a schedule expression, a confidence score, and provenance back to the memory events that established it.
+**Recurring patterns** — behaviors that repeat on a schedule. Derived from memory artifact chains where the same behavior appears at consistent times or under consistent conditions. A knowledge artifact for "user checks weather daily at ~7 AM" carries a schedule expression, a confidence score, and provenance back to the memory events that established it.
 
-**One-shot patterns** — single future events. Created when the user explicitly requests a future action ("remind me tomorrow at 3 PM") or when a time-bound knowledge entry implies a single upcoming trigger ("project deadline is Friday at 5 PM"). The intent fires once, then the pattern is removed from the active schedule.
+**One-shot patterns** — single future events. Created when the user explicitly requests a future action ("remind me tomorrow at 3 PM") or when a time-bound knowledge artifact implies a single upcoming trigger ("project deadline is Friday at 5 PM"). The intent fires once, then the pattern is removed from the active schedule.
 
-**Pattern detection and suggestion.** The RPU assists in identifying temporal patterns from narrative memory chains during the summarization pipeline. When a consistent pattern is detected, the RPU proposes a scheduled or one-time cron entry to the user through an active channel (Web UI, Discord, CLI). The suggestion includes the pattern description, proposed schedule, and the actions it would trigger. The user approves, modifies, or rejects. Approved entries become scheduled cron jobs stored in the knowledge graph.
+**Pattern detection and suggestion.** The RPU assists in identifying temporal patterns from memory artifact chains during the summarization pipeline. When a consistent pattern is detected, the RPU proposes a scheduled or one-time cron entry to the user through an active channel (Web UI, Discord, CLI). The suggestion includes the pattern description, proposed schedule, and the actions it would trigger. The user approves, modifies, or rejects. Approved entries become scheduled cron jobs stored in the knowledge graph.
 
 **Destructive/non-destructive classification.** Each tool service declares its own destructiveness level — whether it only fetches data (read-only) or changes state (write/delete/modify). This classification gates automation behavior:
 
 - **Non-destructive cron entries** may auto-execute once the pattern's confidence score crosses a configurable threshold. The system starts by notifying the user; if the user consistently accepts, confidence rises. If the user dismisses, confidence decreases.
 - **Destructive cron entries** always require explicit per-execution user approval, regardless of confidence level. The notification presents the proposed action and awaits confirmation.
 
-**The Temporal Intent Generator** is a kernel component that manages the cron-like scheduling subsystem. It maintains an internal schedule indexed by next-fire time. When a cron entry's condition is met, it generates an intent event that flows through the same Intent → Proposal → Commit pipeline as all other intents. The generated intent carries provenance back to the knowledge entry, so the full causal chain is traceable. No RPU invocation is needed at fire time — the schedule itself is the proposal.
+**The Temporal Intent Generator** is a kernel component that manages the cron-like scheduling subsystem. It maintains an internal schedule indexed by next-fire time. When a cron entry's condition is met, it generates an intent event that flows through the same Intent → Proposal → Commit pipeline as all other intents. The generated intent carries provenance back to the knowledge artifact, so the full causal chain is traceable. No RPU invocation is needed at fire time — the schedule itself is the proposal.
 
 **The temporal intent lifecycle:**
 
@@ -921,9 +942,11 @@ The memory graph indexes by semantic similarity, temporal proximity, emotional v
 
 The knowledge graph indexes by semantic topic, confidence score, validation status, source provenance, and contradiction history. This enables queries like "what facts are known about topic X and how confident are we."
 
-The summarization pipeline is what makes the two-store, eight-graph model operationally viable. Without it, queries across the full event log would be prohibitively expensive. With it, each graph operates on appropriately summarized data, and the memory and knowledge graphs emerge naturally from the pipeline at different compression levels.
+Memory and knowledge artifacts are stored in the artifact version store, using versioned indexing: each artifact is indexed by its content hash, version, and semantic metadata. The artifact store maintains the latest version pointer for each artifact identity, enabling O(1) current-state lookup while preserving full version history.
 
-The pipeline runs continuously, with summarization depth adjustable based on compute availability. In dynamic repartition mode, the offline optimization loop can re-summarize historical situation model with improved algorithms, updating the memory and knowledge graphs without touching the immutable event log.
+The summarization pipeline is what makes the two-store, eight-graph model operationally viable. Without it, queries across the full event log would be prohibitively expensive. With it, the event store handles raw evidence while memory and knowledge artifacts provide compressed, queryable representations at different abstraction levels.
+
+The pipeline runs continuously, with summarization depth adjustable based on compute availability. In dynamic repartition mode, the offline optimization loop can re-summarize historical situation model with improved algorithms, updating the memory and knowledge artifacts without touching the immutable event log.
 
 ### 8.4 Retrieval Model
 
@@ -943,11 +966,11 @@ The retrieval pipeline operates in five steps:
 
 1. **Entity Trust Check** — if the requesting entity is untrusted, return empty context.
 2. **Channel Policy** — compute effective domains (entity ∩ channel) and effective privacy ceiling (min of entity and channel).
-3. **Domain and Privacy Filter** — query memory and knowledge graphs with effective constraints.
+3. **Domain and Privacy Filter** — query memory and knowledge artifacts with effective constraints.
 4. **Relationship Context Filter** — prioritize memories where the entity is directly involved; apply dual-access knowledge projection (full metadata for originating relationships, stripped metadata for cross-relationship access).
 5. **Task Relevance** — semantic similarity scoring, ranking, and truncation.
 
-The output is a `ContextProjection` that becomes the context field in the RPU request.
+The output is a `ContextProjection` that becomes the context field in the RPU request, containing memory and knowledge artifacts filtered by entity, channel, domain, privacy, and relevance.
 
 → See [RETRIEVAL.md](./core/RETRIEVAL.md) for the full retrieval pipeline specification.
 
@@ -955,7 +978,9 @@ The output is a `ContextProjection` that becomes the context field in the RPU re
 
 ## 9. Artifact Graphs
 
-The macro graph, skill registry, and code registry are stored in the artifact version store — a content-addressed, semantically versioned, lifecycle-managed store. These are versioned entities, not event projections. They reference world-state events for provenance but are not themselves events.
+The artifact version store contains six logical graphs: two cognitive (memory, knowledge) and four authored (macro, skill, code, entity). Cognitive artifacts are versioned interpretations produced by projections over events. Authored artifacts are versioned entities the system creates, manages, and evolves over time. All are content-addressed, semantically versioned, and lifecycle-managed. They reference world-state events for provenance but are not themselves events.
+
+**Cognitive artifacts vs. authored artifacts.** Memory and knowledge artifacts differ from macros, skills, code, and entity definitions in how they are created. Cognitive artifacts are generated by projections over evidence events — they are the system's evolving understanding of the world. Authored artifacts are deliberately created or curated — macros are compiled from execution traces, skills are installed by users, code components are written and tested, entity definitions are established through identity actions. Both share the same versioning model, but their provenance and lifecycle differ.
 
 **Macros are for the runtime. The code registry is for software development. They never intersect.**
 
@@ -1193,16 +1218,17 @@ Skills are not executed differently from other behavior. When a request matches 
 
 The skill remains available as the reasoning path at all times. The derived macro becomes the fast path when promoted. Both coexist; the kernel routes based on provenance version match and confidence.
 
-#### 9.3.4 Relationship to Macros and Knowledge
+#### 9.3.4 Relationship to Memory, Knowledge, and Macros
 
-| Runtime                           | Software                   | Seed               |
-| --------------------------------- | -------------------------- | ------------------ |
-| Macro Graph                       | Code Registry              | Skill Registry     |
-| Execution compression             | Implementation compression | Behavior templates |
-| Passive discovery + skill-derived | Active authoring           | Pre-authored       |
-| Historical validation             | Test validation            | Author-defined     |
+Skills are the seed. Memory is the recorded experience. Knowledge is the factual extraction. Macros are the compressed, personalized derivative. All four are linked by provenance.
 
-Skills are the seed. Macros are the compressed, personalized derivative. Knowledge is the factual extraction. All three are linked by provenance.
+| Cognitive Layer | Artifact Type      | Origin                                    | Lifecycle                                                      |
+| --------------- | ------------------ | ----------------------------------------- | -------------------------------------------------------------- |
+| Memory          | Memory Artifact    | Projection from events                    | Versioned, confidence-tracked, superseded by new evidence      |
+| Knowledge       | Knowledge Artifact | Projection from memory artifacts + events | Versioned, confidence decay, validity windows, revision chains |
+| Runtime         | Macro              | Compiled from execution traces            | Versioned, promoted/demoted by usage                           |
+| Software        | Code Component     | Actively authored                         | Versioned, test-validated                                      |
+| Seed            | Skill              | Pre-authored by user                      | Versioned, installed/uninstalled                               |
 
 → See [MACROS.md](./core/MACROS.md#skill-derived-macros) for the skill-to-macro transformation pipeline.
 
@@ -1271,15 +1297,15 @@ To make the architecture concrete, consider a single user request: _"What's the 
 
 **7. Execution** — The chain executes: acquire weather service → fetch forecast → format response → send to channel. If a macro exists for "weather check + notification," it executes deterministically with a Reasoning Hint explaining the branch taken.
 
-**8. Memory** — The execution outcome is summarized into a narrative memory: "User asked for weather on Jan 1, provided forecast for Boston, user acknowledged."
+**8. Memory** — The execution outcome is summarized into a memory artifact: "User asked for weather on Jan 1, provided forecast for Boston, user acknowledged." This artifact is stored in the Memory Graph with version, confidence, and provenance to the source events.
 
-**9. Knowledge** — If this pattern repeats (user asks for weather every morning), the system may extract knowledge: "User checks weather daily, prefers morning forecast, location is Boston." This knowledge carries a validity window, confidence score, and a temporal pattern derived from the memory chain: `{ schedule: "daily at 07:00", type: "recurring", confidence: 0.88 }`.
+**9. Knowledge** — If this pattern repeats (user asks for weather every morning), the system extracts a knowledge artifact: "User checks weather daily, prefers morning forecast, location is Boston." This knowledge artifact carries a validity window, confidence score, and a temporal pattern derived from the memory artifact chain.
 
 **10. Temporal Intent** — Over time, the pattern "user asks for weather every morning" is detected by the summarization pipeline. The RPU proposes a daily cron entry at 7 AM. The user approves. The temporal intent generator stores the cron entry. When 7 AM arrives, it produces an intent event: `{ type: "intent", source: "temporal", desire: "get weather forecast", triggered_by: "knowledge_xyz", schedule_type: "recurring" }`. This flows through the same proposal → commit pipeline. Since fetching weather is a non-destructive tool service, the entry auto-executes above the confidence threshold. The user receives a notification; if they dismiss it, the pattern's confidence decreases.
 
 **11. Compression** — If a macro exists for the weather check pattern, the temporal intent triggers the macro instead of full reasoning. The macro executes deterministically with a Reasoning Hint: "User typically wants weather at 7 AM, proactively offering."
 
-Each step is an immutable event in the world-state graph. The full provenance chain is traceable. The system can answer: why was the weather fetched, what perception triggered it, what situation model was generated, what chain executed it, and what knowledge was derived.
+Each step is an immutable event in the world-state graph or a versioned artifact in the artifact store. The full provenance chain is traceable. The system can answer: why was the weather fetched, what perception triggered it, what situation model was generated, what chain executed it, what memory was recorded, and what knowledge was derived.
 
 ### 11.1 Running Example with Skills
 
