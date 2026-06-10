@@ -57,7 +57,7 @@
 
 **Mitigations:**
 
-- The kernel validates all RPU outputs against expected schemas before use (MULTIMODAL_INTERFACE.md: Orchestration Harness).
+- The kernel validates all RPU outputs against expected schemas before use ([MULTIMODAL_INTERFACE.md: Orchestration Harness](MULTIMODAL_INTERFACE.md#orchestration-harness)).
 - Tool calls proposed by the RPU are verified against current world-state and priority constraints before execution.
 - State updates proposed by the RPU are validated against the current world-state projection before being committed.
 - The RPU cannot execute actions directly; it can only propose. The kernel is the execution authority.
@@ -74,7 +74,7 @@
 **Mitigations:**
 
 - All channel input is treated as intent proposals, not commands. The kernel validates and schedules execution regardless of source ([SECURITY.md: Channel Security](SECURITY.md#channel-security)).
-- Input validation ensures all data passed to the RPU is structured and schema-validated (MULTIMODAL_INTERFACE.md: Orchestration Harness).
+- Input validation ensures all data passed to the RPU is structured and schema-validated ([MULTIMODAL_INTERFACE.md: Orchestration Harness](MULTIMODAL_INTERFACE.md#orchestration-harness)).
 - Channels on untrusted surfaces never receive raw world-state data, only projected and filtered views.
 - The RPU receives structured context, not raw user input. User input is processed through the signal-to-intent pipeline before reaching the RPU.
 

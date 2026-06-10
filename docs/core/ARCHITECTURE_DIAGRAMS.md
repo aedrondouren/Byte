@@ -24,7 +24,7 @@ For the full two-store specification, see [TECHNICAL_CONCEPT.md Section 1.6](../
 
 ## Entity Graph Position (Prose)
 
-The Entity Graph is the fourth artifact graph in the Artifact Version Store, alongside the Macro Graph, Skill Registry, and Code Registry. It stores versioned entity definitions — identity, trust level, permissions, and relationships — as content-addressed, lifecycle-managed artifacts. Entity state (last seen, interaction count, derived preferences) is a projection over the world-state event stream, not stored as an artifact.
+The Entity Graph is the sixth artifact graph in the Artifact Version Store, alongside Memory, Knowledge, Macro, Skill, and Code Registry graphs. It stores versioned entity definitions — identity, trust level, permissions, and relationships — as content-addressed, lifecycle-managed artifacts. Entity state (last seen, interaction count, derived preferences) is a projection over the world-state event stream, not stored as an artifact.
 
 The Cognitive Kernel reads from both stores, invokes the RPU for reasoning, and executes through semantic orchestration primitives.
 

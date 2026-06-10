@@ -422,8 +422,6 @@ This classification matters for debugging. When state is incorrect, the projecti
 
 **Source dimension.** Projections also differ by what they consume. Some projections read only events (perception processing, execution graph derivation, memory extraction). Others read events and existing artifacts (knowledge generalization from memory artifacts, memory revision from new evidence). Revision projections — those that read an existing artifact and new evidence to produce a revised artifact version — are typically hybrid on both axes: they combine deterministic and probabilistic stages, and they consume from multiple sources (events + artifacts). This makes them the most complex projection type, analogous to a merge commit in Git.
 
-**Source dimension.** Projections also differ by what they consume. Some projections read only events (perception processing, execution graph derivation). Others read events and existing artifacts (memory revision, knowledge generalization). Revision projections — those that read an existing artifact and new evidence to produce a revised artifact version — are typically hybrid on both axes: they combine deterministic and probabilistic stages, and they consume from multiple sources (events + artifacts). This makes them the most complex projection type, analogous to a merge commit in Git.
-
 ### 4.6 DAG Structure
 
 The graph is a DAG, not a linear chain. Multiple chains execute concurrently. Reasoning can fork. Execution paths can merge. Lineage is preserved across all branches. Execution chains behave like branches — long-running tasks become branches of execution that can pause, resume, fork, merge, or terminate. The scheduler determines which branches receive resources.

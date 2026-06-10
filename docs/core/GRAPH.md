@@ -142,7 +142,7 @@ Entity definition lifecycle states: `discovered` → `pending_review` → `activ
 
 ### Channels are bidirectional boundaries
 
-````text
+```text
 State Graph → Channel → External Surface (Web, Discord, CLI, API)
 External Surface → Channel → Event
 
@@ -152,6 +152,7 @@ All channels are bidirectional. Primary orientation determines dominant flow:
 
 Channels must be Admin-approved before processing events.
 Control signal authority requires explicit enablement (default: disabled).
+```
 
 ### Trust Hierarchy
 
@@ -310,4 +311,3 @@ Keep this statement in mind while reviewing future revisions. If a new subsystem
 
 - If a transformation doesn't produce durable runtime knowledge, it's a channel, not a projection.
 - If a channel tries to produce runtime state, it should emit events instead.
-````

@@ -153,9 +153,11 @@ interface RPURequest {
 interface ContextProjection {
 	memories: MemoryEvent[]; // Filtered by entity, channel, domain, privacy, relevance
 	knowledge: KnowledgeEntry[]; // Dual-access: factual content + scoped contextual metadata
-	entities: Entity[]; // Relevant entities for current context
+	entities: EntityDefinition[]; // loaded from Entity Graph
+	entityStates: EntityState[]; // projected from event stream
 	channel: ChannelPolicy; // Active channel constraints
-	activeEntity: Entity; // The entity this projection is for
+	activeEntity: EntityDefinition; // current version from Entity Graph
+	activeEntityState: EntityState; // projected state for active entity
 	permissionSummary: {
 		accessibleDomains: string[]; // Domains this entity can access
 		privacyCeiling: string; // Maximum privacy level
